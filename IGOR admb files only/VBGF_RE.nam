@@ -1,0 +1,7 @@
+#Name of the .dat and .ctl file used
+VBGF_RE.dat
+VBGF_RE.ctl
+
+0	#Use .par file? (0=No/1=Yes)
+
+Code version:
