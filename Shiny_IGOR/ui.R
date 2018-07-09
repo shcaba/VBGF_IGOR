@@ -154,7 +154,8 @@ shinyUI(fluidPage(
                                                                                        )
                                                                                 ),
                                                                                 column(3, 
-                                                                                       actionButton("get_z", "Get Z Value", style = "margin-top:25px"),
+                                                                                       helpText("Get Z Value and update the most", em("recent RE model"), "summary"),
+                                                                                       actionButton("get_z", "Get Z"),
                                                                                        textOutput("z_value")
                                                                                 )
                                                                               ),

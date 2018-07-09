@@ -65,14 +65,15 @@ shinyServer(function(input, output, session) {
     summaries = data.frame("Run name" = character(), "Starting Linf" = double(), "Starting K" = double(),
                            "Starting t0" = double(), "Linf mean" = double(), "Linf sd" = double(), "K mean" = double(), "K sd" = double(),
                            "t0 mean" = double(), "t0 sd" = double(), "CV Length Error" = double(), "CV Age Error" = double(),
-                           "alpha" = double(), "sigma" = double(), "beta" = double(), "shape" = double(), "scale" = double(),
+                           "alpha" = double(), "sigma" = double(), "beta" = double(), "shape" = double(), "scale" = double(), "z" = double(),
                            check.names = FALSE
     ),
     # filtered data table as estimation runs input
     selected_data = NULL,
     type = NULL,
     get_start = FALSE,
-    get_end = FALSE
+    get_end = FALSE,
+    last_re_run = 0
   )
   
   # download a sample data table
@@ -260,6 +261,7 @@ shinyServer(function(input, output, session) {
                                    "beta" = NA,
                                    "shape" = NA,
                                    "scale" = NA,
+                                   "z" = NA,
                                    check.names = FALSE), digits = 4)
       } else {
         #        if (fit_data == 4) {
@@ -293,6 +295,7 @@ shinyServer(function(input, output, session) {
                                    "beta" = NA,
                                    "shape" = NA,
                                    "scale" = NA,
+                                   "z" = NA,
                                    check.names = FALSE), digits = 4)
         # } else { # fit_data == 5
         #   # fit to multiple reads (regression)
@@ -318,6 +321,7 @@ shinyServer(function(input, output, session) {
         #                              "beta" = NA,
         #                              "shape" = NA,
         #                              "scale" = NA,
+        #                              "z" = NA,
         #                              check.names = FALSE), digits = 4)
         # }
       }
@@ -394,6 +398,7 @@ shinyServer(function(input, output, session) {
                                    "beta" = NA,
                                    "shape" = NA,
                                    "scale" = NA,
+                                   "z" = NA,
                                    check.names = FALSE), digits = 4)
       } else if (input$likelihoods == "Exponential") {
         rv$type = "exp"
@@ -427,6 +432,7 @@ shinyServer(function(input, output, session) {
                                    "beta" = rep[5,1],
                                    "shape" = NA,
                                    "scale" = NA,
+                                   "z" = NA,
                                    check.names = FALSE), digits = 4)
       } else { #gamma
         rv$type = "gam"
@@ -461,10 +467,12 @@ shinyServer(function(input, output, session) {
                                    "beta" = NA,
                                    "shape" = rep[5,1],
                                    "scale" = rep[6,1],
+                                   "z" = NA,
                                    check.names = FALSE), digits = 4)
       }
       # updata the summary table with a new row from the run
       rv$summaries = rbind(rv$summaries, newRow)
+      rv$last_re_run = nrow(rv$summaries)
       return(rep)
     }
   })
@@ -482,6 +490,7 @@ shinyServer(function(input, output, session) {
   })
   
   # prints the computed z value when user clicks get z value button
+  # and updates the z value in the most recent RE model run
   output$z_value <- renderText({
     if (input$get_z == 0) return()
     isolate({
@@ -501,7 +510,9 @@ shinyServer(function(input, output, session) {
       })
       
       if (!is.null(slope)) {
-        return(paste0("z = ", format(slope, digits = 4)))
+        slope = format(slope, digits = 4)
+        rv$summaries[["z"]][rv$last_re_run] = slope
+        return(paste0("z = ", slope))
       }
     })
   })
