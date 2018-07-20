@@ -8,6 +8,48 @@ library(DT)
 library(reshape2)
 library(TMB)
 
+compile("vbre_Gamma.cpp")
+compile("vbre_Exponential.cpp")
+compile("vbre_Normal.cpp")
+compile("vb_likelihood.cpp")
+compile("linear_likelihood.cpp")
+compile("schnute_likelihood.cpp")
+compile("logistic_likelihood.cpp")
+compile("gompertz_likelihood.cpp")
+compile("linear_Normal.cpp")
+compile("linear_Exponential.cpp")
+compile("linear_Gamma.cpp")
+compile("gompertz_Normal.cpp")
+compile("gompertz_Exponential.cpp")
+compile("gompertz_Gamma.cpp")
+compile("schnute_Normal.cpp")
+compile("schnute_Exponential.cpp")
+compile("schnute_Gamma.cpp")
+compile("logistic_Normal.cpp")
+compile("logistic_Exponential.cpp")
+compile("logistic_Gamma.cpp")
+dyn.load(dynlib("vbre_Gamma"))
+dyn.load(dynlib("vbre_Exponential"))
+dyn.load(dynlib("vbre_Normal"))
+dyn.load(dynlib("vb_likelihood"))
+dyn.load(dynlib("linear_likelihood"))
+dyn.load(dynlib("schnute_likelihood"))
+dyn.load(dynlib("logistic_likelihood"))
+dyn.load(dynlib("gompertz_likelihood"))
+dyn.load(dynlib("logistic_Normal"))
+dyn.load(dynlib("logistic_Exponential"))
+dyn.load(dynlib("logistic_Gamma"))
+dyn.load(dynlib("schnute_Normal"))
+dyn.load(dynlib("schnute_Exponential"))
+dyn.load(dynlib("schnute_Gamma"))
+dyn.load(dynlib("linear_Normal"))
+dyn.load(dynlib("linear_Exponential"))
+dyn.load(dynlib("linear_Gamma"))
+dyn.load(dynlib("gompertz_Normal"))
+dyn.load(dynlib("gompertz_Exponential"))
+dyn.load(dynlib("gompertz_Gamma"))
+
+
 appCSS <- "
 #loading-content {
 position: absolute;
@@ -24,6 +66,7 @@ color: #000000;
 
 shinyUI(fluidPage(
   useShinyjs(),
+  withMathJax(),
   inlineCSS(appCSS),
   
   # Loading message
@@ -68,25 +111,70 @@ shinyUI(fluidPage(
                  ),
                  tabPanel("Analyze", icon = icon("hourglass", lib = "glyphicon"),
                           fluidRow(
-                            p("Fit your data with either a standard nonlinear fit or a random effects model. 
+                            p("Fit your data with either a standard fit or a random effects model. 
                               Check your results in the", actionButton("go_summaries", "Summaries", icon("edit", lib = "glyphicon")), "tab",
                               style = "margin-top:25px; font-size:15px"),
                             tabsetPanel(id = "fit_choice",
-                                        tabPanel("Standard Non-Linear Fit",
+                                        tabPanel("Standard Fit",
                                                  column(4, 
-                                                        h3("Standard Non-Linear Fit"),
+                                                        h3("Standard Fit"),
                                                         wellPanel(
-                                                          selectInput("model", "Growth Model", choices = c("Von Bertalanffy")),
-                                                          fluidRow(
-                                                            column(4, textInput("linf_nls", "Linf", 912)),
-                                                            column(4, textInput("kappa_nls", "K", 0.04)),
-                                                            column(4, textInput("t0_nls", "t0", 0))
+                                                          selectInput("model_nls", "Growth Model", 
+                                                                      choices = c("Linear", "Logistic", "Von Bertalanffy", "Schnute", "Gompertz")),
+                                                          conditionalPanel(
+                                                            condition = "input.model_nls == 'Von Bertalanffy'",
+                                                            helpText('$$y=linf\\cdot[1-e^{-K\\cdot(x-t0)}]$$'),
+                                                            fluidRow(
+                                                              column(4, textInput("linf_nls", "Linf (Upper Asymptote)", 912)),
+                                                              column(4, textInput("kappa_nls", "K (Growth Rate)", 0.04)),
+                                                              column(4, textInput("t0_nls", "t0", 0))
+                                                            )
                                                           ),
+                                                          conditionalPanel(
+                                                            condition = "input.model_nls == 'Gompertz'",
+                                                            helpText('$$y=a\\cdot e^{-b\\cdot e^{-kx}}$$'),
+                                                            fluidRow(
+                                                              column(4, textInput("gom_a_nls", "a (Upper Asymptote)")),
+                                                              column(4, textInput("gom_b_nls", "b (Growth Displacement)")),
+                                                              column(4, textInput("gom_k_nls", "k (Growth Rate)"))
+                                                            )
+                                                          ),
+                                                          conditionalPanel(
+                                                            condition = "input.model_nls == 'Schnute'",
+                                                            helpText('$$y=(r0+b\\cdot e^{kx})^m$$'),
+                                                            fluidRow(
+                                                              column(3, textInput("sch_r0_nls", "r0 (Reference Value")),
+                                                              column(3, textInput("sch_b_nls", "b (Growth Range)")),
+                                                              column(3, textInput("sch_k_nls", "k (Growth Rate)")),
+                                                              column(3, textInput("sch_m_nls", "m (Slope of Growth)"))
+                                                            )
+                                                          ),
+                                                          conditionalPanel(
+                                                            condition = "input.model_nls == 'Logistic'",
+                                                            helpText('$$y=\\dfrac{a}{1+b\\cdot e^{-kx}}$$'),
+                                                            fluidRow(
+                                                              column(4, textInput("log_a_nls", "a (Upper Asymptote)")),
+                                                              column(4, textInput("log_b_nls", "b (Growth Range)")),
+                                                              column(4, textInput("log_k_nls", "k (Growth Rate)"))
+                                                            )
+                                                          ),
+                                                          conditionalPanel(
+                                                            condition = "input.model_nls == 'Linear'",
+                                                            helpText('$$y=Intercept + Slope\\cdot x$$')
+                                                          ),
+                                                          conditionalPanel(
+                                                            condition = "input.model_nls == 'Linear' && input.fit_type == 'Constant Length CV'",
+                                                            fluidRow(
+                                                              column(4, textInput("intercept_nls", "Intercept (Length at Age 0)")),
+                                                              column(4, textInput("slope_nls", "Slope (Growth Rate)"))
+                                                            )
+                                                          ),
+                                                          radioButtons("fit_type", "Fit type", c("Standard Deviation", "Constant Length CV")),
                                                           selectInput("fit_data", "Fit to", c("1 - Selected Read", "2 - Average Age", "3 - Median Age", 
-                                                                                              "4 - constant Length CV", "5 - Lengths with Multiple Ages")),
+                                                                                              "4 - Lengths with Multiple Ages")),
                                                           uiOutput("selected_read"),
                                                           conditionalPanel(
-                                                            condition = "input.fit_data == '4 - constant Length CV'",
+                                                            condition = "input.fit_type == 'Constant Length CV'",
                                                             textInput("CV_const", "CV", 0.1)
                                                           ),
                                                           textInput("runname_nls", "Run Name", "Default"),
@@ -100,19 +188,60 @@ shinyUI(fluidPage(
                                                  column(4, 
                                                         h3("Random Effects Model"),
                                                         wellPanel(
-                                                          selectInput("model", "Growth Model", choices = c("Von Bertalanffy")),
-                                                          fluidRow(
-                                                            column(4, textInput("linf_re", "Linf", 912)),
-                                                            column(4, textInput("kappa_re", "K", 0.04)),
-                                                            column(4, textInput("t0_re", "t0", 0))
+                                                          selectInput("model_re", "Growth Model", 
+                                                                      choices = c("Linear", "Logistic", "Von Bertalanffy", "Schnute", "Gompertz")),
+                                                          conditionalPanel(
+                                                            condition = "input.model_re == 'Von Bertalanffy'",
+                                                            helpText('$$y=linf\\cdot[1-e^{-K\\cdot(x-t0)}]$$'),
+                                                            fluidRow(
+                                                              column(4, textInput("linf_re", "Linf (Upper Asymptote)", 912)),
+                                                              column(4, textInput("kappa_re", "K (Growth Rate)", 0.04)),
+                                                              column(4, textInput("t0_re", "t0", 0))
+                                                            )
+                                                          ),
+                                                          conditionalPanel(
+                                                            condition = "input.model_re == 'Gompertz'",
+                                                            helpText('$$y=a\\cdot e^{-b\\cdot e^{-kx}}$$'),
+                                                            fluidRow(
+                                                              column(4, textInput("gom_a_re", "a (Upper Asymptote)")),
+                                                              column(4, textInput("gom_b_re", "b (Growth Displacement)")),
+                                                              column(4, textInput("gom_k_re", "k (Growth Rate)"))
+                                                            )
+                                                          ),
+                                                          conditionalPanel(
+                                                            condition = "input.model_re == 'Schnute'",
+                                                            helpText('$$y=(r0+b\\cdot e^{kx})^m$$'),
+                                                            fluidRow(
+                                                              column(3, textInput("sch_r0_re", "r0 (Reference Value")),
+                                                              column(3, textInput("sch_b_re", "b (Growth Displacement)")),
+                                                              column(3, textInput("sch_k_re", "k (Growth Rate)")),
+                                                              column(3, textInput("sch_m_re", "m (Slope of Growth)"))
+                                                            )
+                                                          ),
+                                                          conditionalPanel(
+                                                            condition = "input.model_re == 'Logistic'",
+                                                            helpText('$$y=\\dfrac{a}{1+b\\cdot e^{-kx}}$$'),
+                                                            fluidRow(
+                                                              column(4, textInput("log_a_re", "a (Upper Asymptote)")),
+                                                              column(4, textInput("log_b_re", "b (Growth Range)")),
+                                                              column(4, textInput("log_k_re", "k (Growth Rate)"))
+                                                            )
+                                                          ),
+                                                          conditionalPanel(
+                                                            condition = "input.model_re == 'Linear'",
+                                                            helpText('$$y=Intercept + Slope\\cdot x$$'),
+                                                            fluidRow(
+                                                              column(4, textInput("intercept_re", "Intercept (Length at Age 0)")),
+                                                              column(4, textInput("slope_re", "Slope (Growth Rate)"))
+                                                            )
                                                           ),
                                                           fluidRow(
                                                             column(6, textInput("CV_e", "CV of Random Effect", -1),
-                                                                   helpText("If negative, internally estimates")),
+                                                                   helpText("If negative, internally calculated")),
                                                             column(6, textInput("CV_Lt", "Length Standard", 0.1))
                                                           ),
                                                           h5("Age Likelihood Type for Random Effects"),
-                                                          tabsetPanel(id = "likelihoods",
+                                                          tabsetPanel(id = "likelihoods", selected = "Gamma",
                                                                       tabPanel("Normal", 
                                                                                textInput("alpha", "Mean Population Age", 5),
                                                                                textInput("sigma_age", "StDev of Population", 1)
@@ -176,7 +305,16 @@ shinyUI(fluidPage(
                           )
                  ),
                  tabPanel("Summaries", icon = icon("edit", lib = "glyphicon"),
-                   DTOutput("summaries")   
+                   h2("Von Bertlanffy Model Summaries"),
+                   DTOutput("vb_summaries"),
+                   h2("Linear Model Summaries"),
+                   DTOutput("linear_summaries"),
+                   h2("Gompertz Model Summaries"),
+                   DTOutput("gompertz_summaries"),
+                   h2("Logistic Model Summaries"),
+                   DTOutput("logistic_summaries"),
+                   h2("Schnute Model Summaries"),
+                   DTOutput("schnute_summaries")
                  )
                )
         ),

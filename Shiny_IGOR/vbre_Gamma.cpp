@@ -1,6 +1,16 @@
 #include <TMB.hpp>
 
 template<class Type>
+bool isNA(Type x){
+  return R_IsNA(asDouble(x));
+}
+
+template<class Type>
+bool isFinite(Type x){
+  return R_finite(asDouble(x));
+}
+
+template<class Type>
 Type objective_function<Type>::operator() () {
   // data:
   DATA_MATRIX(age);
@@ -34,18 +44,21 @@ Type objective_function<Type>::operator() () {
   CV_e = CV_e < 0.05 ? 0.05 : CV_e;
   
   for (int i = 0; i < n; i++) {
-    Type len_pred = linf * (1.0 - exp(-kappa * (age_re(i) - t0)));  
-    
-    Type sigma_e = CV_e * age_re(i) + eps;
-    Type sigma_Lt = CV_Lt * (len_pred + eps);
-    
-    nll -= dnorm(len(i), len_pred, sigma_Lt, true);
-    nll -= dgamma(age_re(i) + eps, gam_shape, gam_scale, true);
-    
-    for (int j = 0; j < num_reads; j++) {
-      if (age(j, i) >= 0) {
-        nll -= dnorm(age(j, i), age_re(i), sigma_e, true); 
-      }
+    Type x = age_re(i);
+    if (!isNA(x) && isFinite(x)) {
+      Type len_pred = linf * (1.0 - exp(-kappa * (x - t0)));  
+      
+      Type sigma_e = CV_e * x + eps;
+      Type sigma_Lt = CV_Lt * (len_pred + eps);
+      
+      nll -= dnorm(len(i), len_pred, sigma_Lt, true);
+      nll -= dgamma(x + eps, gam_shape, gam_scale, true);
+      
+      for (int j = 0; j < num_reads; j++) {
+        if (!isNA(age(j, i)) && isFinite(age(j, i)) && age(j, i) >= 0) {
+          nll -= dnorm(age(j, i), x, sigma_e, true); 
+        }
+      }  
     }
   }
   
