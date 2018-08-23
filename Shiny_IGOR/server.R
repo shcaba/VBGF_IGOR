@@ -1,79 +1,100 @@
+# shiny server functions
 
-
-# computes coefficient of variation for a vector
-coeff_var <- function(v) {sd(v, na.rm = TRUE) / mean(v, na.rm = TRUE)}
-
-# report convergence failed message
-convg_err <- function() {showModal(modalDialog(
-  title = "Important message",
-  "The model didn't converge. Check your starting values.",
-  easyClose = TRUE
-))}
-
-# returns an optimization upon success, otherwise error message alert
-# and returns NULL
-opt <- function(obj, lower, upper) {
-  opt = tryCatch({
-    nlminb(obj$par, obj$fn, obj$gr, lower = lower, upper = upper)
-  },
-  error = function(cond) {
-    convg_err()
-    return(NULL)
-  })
-  return(opt)
-}
-
-# plot data points and the fitting curve
-plot <- function(rv, rep, mode, model) {
-  age_max = max(rv$selected_data[c(-1, -2, -3, -4)])
-  # get current selected reads (the ones in the filtered data table)
-  reads_choices = names(rv$selected_data[c(-1, -2, -3, -4)])
-  colors = c(brewer.pal(length(reads_choices), "Greens"), "black")
-  names(colors) = c(reads_choices, "Expected")
-  
-  p = ggplot(data = rv$selected_data) +
-    labs(title = "Age and Growth Fit", x = "Age (yr)", y = "Length (mm)")
-  for (i in reads_choices) {
-    p = p + geom_point(mapping = aes_string(Area = "Area", Sex = "Sex", x = i, y= "Length", color = paste("'", i, "'", sep = "")))
-  }
-  if (mode == "analyze" ) {
-    if (model == "nls") {
-      model_name = rv$last_run_type
-    } else {
-      model_name = rv$last_re_run_type
-    }
-    if (!is.null(model_name)) {
-      if (model_name == "vb") {
-        p = p + stat_function(fun = function(x) rep[1,1] * (1 - exp(-rep[2,1] * (x - rep[3,1]))),
-                              aes(x = x, color = "Expected"), data = data.frame(x = c(0, age_max))) 
-      } else if (model_name == "gompertz") {
-        p = p + stat_function(fun = function(x) rep[1,1] * exp(-rep[2,1] * exp(-rep[3,1] * x)),
-                              aes(x = x, color = "Expected"), data = data.frame(x = c(0, age_max))) 
-      } else if (model_name == "logistic") {
-        p = p + stat_function(fun = function(x) rep[1,1] / (1 + rep[2,1] * exp(-rep[3,1] * x)),
-                              aes(x = x, color = "Expected"), data = data.frame(x = c(0, age_max))) 
-      } else if (model_name == "linear") {
-        p = p + stat_function(fun = function(x) rep[1,1] + x * rep[2,1],
-                              aes(x = x, color = "Expected"), data = data.frame(x = c(0, age_max))) 
-      } else { # model_name == "schnute"
-        p = p + stat_function(fun = function(x) (rep[1,1] + rep[2,1] * exp(rep[3,1] * x)) ** rep[4,1],
-                              aes(x = x, color = "Expected"), data = data.frame(x = c(0, age_max))) 
-      }
-    } 
-  }
-  p = p + scale_colour_manual(name = "", values = colors)
-  return(ggplotly(p, tooltip = c("x", "y", "Area", "Sex")) %>% plotly::config(modeBarButtonsToRemove = 
-    list("sendDataToCloud", "zoom2d", "pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d", "autoScale2d",
-         "resetScale2d", "hoverCompareCartesian", "hoverClosestCartesian"), displaylogo = FALSE, collaborate = FALSE))
-}
+# to show mathjax in plot
+addResourcePath("tmp", tempdir())
+f = tempfile(fileext = ".html")
 
 shinyServer(function(input, output, session) {
 
   hide(id = "loading-content", anim = TRUE, animType = "fade")    
   show("app-content")
   
+  # set help content
+  observe({
+    indTab = NULL
+    nextPage = NULL
+    
+      # Index help data into right tab
+      if (input$menu == "tab1") {
+        indTab = c(1, 2)
+        nextPage = nextPage = c("tab2", "tab2-1")
+      }
+      if (input$menu == "tab2" && input$tab2_subpanel == "tab2-1") {
+        if (input$oto_age_menu == "tab2-1-1") {
+          indTab = 3
+          nextPage = c("tab2", "tab2-1", "tab2-1-3")
+        }
+        if (input$oto_age_menu == "tab2-1-3") {
+          indTab = 4
+          nextPage = c("tab2", "tab2-2", "tab2-1-1") #tab2-1-1 reset very necessary!!!
+        }
+      }
+      if (input$menu == "tab2" && input$tab2_subpanel == "tab2-2") {
+        indTab = c(5, 6)
+        nextPage = c("tab3", "tab3-1")
+      }
+      if (input$menu == "tab3") {
+        if(input$data == "tab3-1") {
+          indTab = 7
+          nextPage = c("tab3", "tab3-2")
+        } else {
+          indTab = 8
+          nextPage = c("tab4", "tab4-1")
+        }
+      }
+      if (input$menu == "tab4" && input$fit_choice == "tab4-1") {
+        indTab = 9
+        nextPage = c("tab4", "tab4-2")
+      }
+      if (input$menu == "tab4" && input$fit_choice == "tab4-2") {
+        if (input$re_results == "tab4-2-2") {
+          indTab = 11
+          nextPage = c("tab5", "tab4-2-1") #tab4-2-1 reset very necessary!!!
+        } else {
+          indTab = 10
+          nextPage = c("tab4", "tab4-2", "tab4-2-2")
+        }
+      } 
+      if (input$menu == "tab5") {
+        indTab = 12
+        nextPage = "tab1"
+      }
+      # set help content
+      if (!is.null(indTab) && !is.null(nextPage)) {
+        session$sendCustomMessage(type = 'setHelpContent', message = list(steps = toJSON(helpData[indTab, ]),
+              nextPage = toJSON(nextPage)))  
+      }
+  })
+  
+  observeEvent(input$startHelp,{
+    if(input$startHelp == 0) return()
+    # Auto start help if we press nextpage
+    session$sendCustomMessage(type = 'startHelp', message = list(""))
+  })
+  
   rv <- reactiveValues(
-    # summary table for estimation runs
+    # original oto age data uploaded by user
+    oto_age_data = NULL,
+    # same as oto_age_data but contains a "Selected" T/F column to indicate if data point is selected
+    oto_age_data_filter_info = NULL,
+    # original age length data uploaded by user
+    age_length_data = NULL,
+    # summaries for oto age analysis
+    oto_age_summary = NULL,
+    brkpt_summary = NULL,
+    slope_summary = NULL,
+    intercept_summary = NULL,
+    
+    oto_age_model = NULL,
+    oto_age_model_name = NULL,
+    jitter_plot = NULL,
+    predicted_oto_age_data = NULL, # data table shown in (Run a new oto-age model) Fitted Values tab
+    
+    existing_oto_age_model = NULL, # oto-age model uploaded by user
+    oto_data = NULL, # table that contains otowt, used with existing_oto_age_model to get ages
+    predicted_oto_age_data_from_exisiting = NULL,
+    
+    # summary table for growth curve estimation runs
     vb_summaries = data.frame("Run name" = character(), "Starting Linf" = double(), "Starting K" = double(),
                            "Starting t0" = double(), "Linf mean" = double(), "Linf sd" = double(), "K mean" = double(), "K sd" = double(),
                            "t0 mean" = double(), "t0 sd" = double(), "CV Length Error" = double(), "CV Age Error" = double(),
@@ -96,8 +117,10 @@ shinyServer(function(input, output, session) {
                                     "Starting k" = double(), "a mean" = double(), "a Std" = double(), "b mean" = double(), "b Std" = double(),
                                     "k mean" = double(), "k Std" = double(), "CV Length Error" = double(), "CV Age Error" = double(), "alpha" = double(), "sigma" = double(),
                                     "beta" = double(), "shape" = double(), "scale" = double(), "z" = double(), check.names = FALSE),
-    # filtered data table as estimation runs input
+    # filtered age length data table as estimation runs input
     selected_data = NULL,
+    rep_nls = NULL, # standard growth model
+    rep_re = NULL, # random effects growth model
     type = NULL, # only for random effects model: normal, exponential, or gamma
     get_start = FALSE,
     get_end = FALSE,
@@ -107,50 +130,505 @@ shinyServer(function(input, output, session) {
     z_plot_layer = NULL
   )
   
-  # download a sample data table
-  output$downloadData <- downloadHandler(
-    filename = "sample_data.csv",
+  # download a sample age length data table
+  output$download_age_length_data <- downloadHandler(
+    filename = "sample_age_length_data.csv",
     content <- function(file) {
-      file.copy("sample.csv", file)
+      file.copy("sample_downloads/sample_age_length_data.csv", file)
     }
   )
   
-  # original data table uploaded by user
-  fish <- reactive({
-    req(input$file)
-    return(read.csv(input$file$datapath))
-  })
-  
-  # renders the original data table uploaded by user
-  output$input_data <- renderDT(
-    fish(), rownames = FALSE
+  # download a sample otowt age data table
+  output$download_oto_age_data <- downloadHandler(
+    filename = "sample_oto_age_data.csv",
+    content <- function(file) {
+      file.copy("sample_downloads/sample_oto_age_data.csv", file)
+    }
   )
   
-  # creates control panel to select reads, areas, and sex
-  output$input_control <- renderUI({
-    reads_choices = paste0("Read", seq_len(ncol(fish()) - 4)) # only include the ReadX columns
-    area_choices = unique(fish()$Area)
-    tagList(
-      fluidRow(
-        column(3, 
-          selectizeInput("reads_selected", "Reads to use", choices = reads_choices, selected = reads_choices, multiple = TRUE)
-        ),
-        column(3,
-          selectizeInput("areas_selected", "Areas to use", choices = area_choices, selected = area_choices, multiple = TRUE)
-        ),
-        column(3, selectInput("sex", "Sex", choices = c("Any", "F", "M"))),
-        column(3, actionButton("preview_data", "Preview Selected Data", 
-                               icon = icon("wrench", lib = "glyphicon"), style = "margin-top:25px"))
-      )
+  # returns TRUE if uploaded oto age file has the columns required, FALSE otherwise
+  # column order does not matter, and will not reorder
+  check_oto_age_file <- function(col_names_upload, col_names) {
+    if (length(col_names_upload) != length(col_names)) {
+      return(FALSE)
+    }
+    for (i in 1 : length(col_names_upload)) {
+      if (!col_names_upload[i] %in% col_names) {
+        return(FALSE)
+      } 
+    }
+    return(TRUE)
+  }
+  
+  # check if data has the required columns, order does not matter, but will reorder if data format is correct
+  # returns data with column order "Sample", "Species", "Area", "Sex", "Length", "Read1", "Read2"...
+  # returns NULL if uploaded age length file does not have the columns required
+  check_age_len_file <- function(data) {
+    col_names_upload = colnames(data)
+    col_names = c("Sample", "Species", "Area", "Sex", "Length")
+    
+    if (length(col_names_upload) <= length(col_names)) {
+      return(NULL)
+    }
+    for (i in 1 : length(col_names)) {
+      if (!col_names[i] %in% col_names_upload) {
+        return(NULL)
+      }
+    }
+    num_reads = length(col_names_upload) - length(col_names)
+    # reads columns need to be labeled as Read1, Read2, etc.
+    for (i in 1 : num_reads) {
+      col = paste0("Read", i)
+      if (!col %in% col_names_upload) {
+        return(NULL)
+      }
+    }
+    # reorder the columns
+    reads = paste0("Read", seq_len(num_reads))
+    cols_to_use = c(col_names, reads)
+    return(data[cols_to_use])
+  }
+  
+  # original age_length data table uploaded by user
+  observe({
+    req(input$age_length_file)
+    data = try(read.csv(input$age_length_file$datapath), silent = TRUE)
+    if (class(data)[[1]] == "try-error") {
+      invalid_upload()
+      shinyjs::reset("age_length_file")
+    } else {
+      data = check_age_len_file(data)
+      if (is.null(data)) {
+        invalid_upload()
+        shinyjs::reset("age_length_file")
+      } else {
+        rv$age_length_data = data
+      }
+    }
+  })
+  
+  # original otowt age data table uploaded by user
+  observe({
+    req(input$oto_age_file)
+    data = try(read.csv(input$oto_age_file$datapath), silent = TRUE)
+    if (class(data)[[1]] == "try-error") {
+      invalid_upload()
+      shinyjs::reset("oto_age_file")
+    } else {
+      col_names_upload = colnames(data)
+      col_names = c("Sample", "Species", "Area", "Sex", "Length", "Age", "OtoWt")
+      if (!check_oto_age_file(col_names_upload, col_names)) {
+        invalid_upload()
+        shinyjs::reset("oto_age_file")
+      } else {
+        rv$oto_age_data = data
+      }
+    }
+  })
+  
+  # show the Age vs. Otolith Weight Data tab
+  observeEvent(input$go_oto_age, updateTabsetPanel(session, "menu", selected = "tab2"))
+  # show the Length vs. Age Data tab
+  observeEvent(input$go_age_length, updateTabsetPanel(session, "menu", selected = "tab3"))
+  
+  # renders the original otowt age data table uploaded by user
+  output$oto_age_data <- renderDT(
+    rv$oto_age_data, filter = 'top', rownames = FALSE
+  )
+  
+  # renders the original age length data table uploaded by user
+  output$input_data <- renderDT(
+    rv$age_length_data, rownames = FALSE
+  )
+  
+  # computes an oto age model based on user choice
+  observeEvent(input$run_oto_age, {
+    if (is.null(rv$oto_age_data)) {
+      showModal(modalDialog(
+        title = "Important message",
+        "Please upload a file first.",
+        easyClose = TRUE
+      ))
+    } else {
+      disable("oto_age_controls")
+      # show Summary & Plot tab
+      updateTabsetPanel(session, "oto_age_menu", selected = "tab2-1-2")
+      
+      rv$oto_age_summary = NULL
+      rv$brkpt_summary = NULL
+      rv$slope_summary = NULL
+      rv$intercept_summary = NULL
+      
+      oto_age_data_filtered = rv$oto_age_data[input$oto_age_data_rows_all, ]
+      Selected = rep("Not Selected", nrow(rv$oto_age_data))
+      Selected[input$oto_age_data_rows_all] = "Selected"
+      rv$oto_age_data_filter_info = cbind(rv$oto_age_data, "Selected" = Selected)
+      
+      plot_jitter = FALSE
+      add_lengths = FALSE
+      
+      rv$oto_age_model_name = input$oto_age_model_type
+      
+      if (rv$oto_age_model_name == "Linear") {
+        model = try(lm(Age ~ OtoWt, data = oto_age_data_filtered), silent = TRUE)
+        if (class(model)[[1]] == "try-error") {
+          convg_err()
+          enable("oto_age_controls")
+          return()
+        }
+        rv$oto_age_summary = summary(model)[["coefficients"]]
+      } else if (rv$oto_age_model_name == "Quadratic") {
+        model = try(lm(Age ~ poly(OtoWt, 2, raw = TRUE), data = na.omit(oto_age_data_filtered)), 
+                    silent = TRUE)
+        if (class(model)[[1]] == "try-error") {
+          convg_err()
+          enable("oto_age_controls")
+          return()
+        }
+        rv$oto_age_summary = summary(model)[["coefficients"]]
+      } else {
+        if (rv$oto_age_model_name == "1-Breakpoint Piecewise") {
+          names = "Breakpoint 1"
+          if (input$use_quantile) {
+            q1 = as.numeric(input$wt_bkpt1)
+            if (q1 < 0 || q1 > 1) {
+              invalid_quantile()
+              enable("oto_age_controls")
+              return()
+            }
+            wt_brkpts = quantile(oto_age_data_filtered$OtoWt, q1, na.rm = TRUE)
+          } else {
+            wt_brkpts = c(as.numeric(input$wt_bkpt1))
+          }
+          if (input$add_length) {
+            lt_brkpts = c(as.numeric(input$lt_bkpt1))
+            add_lengths = TRUE
+          }
+        } else { # rv$oto_age_model_name == "2-Breakpoints Piecewise"
+          names = c("Breakpoint 1", "Breakpoint 2")
+          if (input$use_quantile) {
+           q1 = as.numeric(input$wt_bkpt1_2bp)
+           q2 = as.numeric(input$wt_bkpt2_2bp)
+           if (q1 < 0 || q1 > 1 || q2 < 0 || q2 > 1) {
+             invalid_quantile()
+             enable("oto_age_controls")
+             return()
+           }
+           wt_brkpts = c(quantile(oto_age_data_filtered$OtoWt, q1, na.rm = TRUE), 
+                         quantile(oto_age_data_filtered$OtoWt, q2, na.rm = TRUE))
+          } else {
+            wt_brkpts = c(as.numeric(input$wt_bkpt1_2bp), as.numeric(input$wt_bkpt2_2bp))  
+          }
+          if (input$add_length) {
+            lt_brkpts = c(as.numeric(input$lt_bkpt1_2bp), as.numeric(input$lt_bkpt2_2bp))
+            add_lengths = TRUE
+          }
+        }
+        
+        if (input$jitter) {
+          if (rv$oto_age_model_name == "1-Breakpoint Piecewise") {
+            plot_jitter = TRUE
+          }
+          jitter = as.numeric(input$num_jitter)
+        } else {
+          jitter = 0
+        }
+        model = oto_age_model(oto_age_data_filtered, wt_brkpts = wt_brkpts, lt_brkpts = lt_brkpts, 
+                              jitter = jitter, add_lengths = add_lengths)
+        
+        if (is.null(model)) {
+          convg_err()
+          enable("oto_age_controls")
+          return()
+        }
+        
+        psi = summary(model)[["psi"]]
+        rownames(psi) = names
+        rv$brkpt_summary = psi
+        rv$slope_summary = slope(model)
+        rv$intercept_summary = intercept(model)
+      }
+      rv$oto_age_model = model
+      enable("download_oto_age_model")
+      pred_ages = predict(rv$oto_age_model, rv$oto_age_data)
+      rv$predicted_oto_age_data = cbind(rv$oto_age_data, "Predicted Ages" = pred_ages)
+  
+      if (plot_jitter) {
+        rv$jitter_plot = jitter_plot(as.numeric(input$num_jitter), rv$oto_age_model)
+      } else {
+        rv$jitter_plot = NULL
+      }
+      enable("oto_age_controls")
+    }
+  })
+
+  # download a sample otowt age data table
+  output$download_oto_age_model <- downloadHandler(
+    filename = "oto_age_model.rds",
+    content <- function(file) {
+      saveRDS(rv$oto_age_model, file)
+    }
+  )
+  
+  # disable model download button when the model is null (nothing has been computed)
+  observe({
+    if (is.null(rv$oto_age_model)) {
+      disable("download_oto_age_model")
+    }
+  })
+  
+  # prints oto age analysis summaries
+  output$oto_age_summary <- renderTable(rv$oto_age_summary, rownames = TRUE, digits = 4)
+  output$brkpt_summary <- renderTable(rv$brkpt_summary, rownames = TRUE, digits = 4)
+  output$slope_summary <- renderTable(rv$slope_summary, rownames = TRUE, digits = 4)
+  output$intercept_summary <- renderTable(rv$intercept_summary, rownames = TRUE, digits = 4)
+  
+  # renders the oto age plot and the model fit
+  output$oto_age_plot <- renderUI({
+    if (is.null(rv$oto_age_data) || is.null(rv$oto_age_model_name)) return()
+    
+    helpText("hello")
+    if (rv$oto_age_model_name == "Quadratic") {
+      quad = y ~ poly(x, 2, raw = TRUE)
+      p = ggplot(data = rv$oto_age_data_filter_info) +
+        geom_point(aes(x = OtoWt, y = Age, colour = Selected)) +
+        geom_smooth(method = "lm", se = FALSE, formula = quad, color = "#0c3f10", aes(x = OtoWt, y = Age))
+    } else {
+      # linear/ 1 breakpoint / 2 breakpoints
+      Expected = predict(rv$oto_age_model, rv$oto_age_data) # for all data points (unfiltered)
+      data = cbind(rv$oto_age_data_filter_info, Expected = Expected)
+      p = ggplot(data = data) +
+        geom_point(aes(x = OtoWt, y = Age, colour = Selected)) +
+        geom_line(aes(x = OtoWt, y = Expected), color = "blue")
+    }
+    p = p + labs(title = "Otolith Weight and Age Fit", x = "Otolith Weight (mg)", y = "Age (yr)") +
+      scale_colour_discrete(name = "")
+    return(ggplotly(p, tooltip = c("x", "y")) %>%
+             # R square and AIC value as annotations
+          layout(annotations = list(text = TeX(sprintf("R^2 = %.3f \\\\ \\text{AIC} = %.3f", AIC(rv$oto_age_model), summary(rv$oto_age_model)$r.squared)),
+                                    xref = "paper",  # normalize coordinates
+                                    yref = "paper",
+                                    x = 0.95,  # appears in bottom right corner
+                                    y = 0.05,
+                                    showarrow = FALSE),
+                 font = list(family = "'Times New Roman', 'arial', 'Raleway','verdana'")) %>%
+          plotly::config(modeBarButtonsToRemove = list("sendDataToCloud", "zoom2d", "pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d", "autoScale2d",
+                "resetScale2d", "hoverCompareCartesian", "hoverClosestCartesian"),
+                displaylogo = FALSE, collaborate = FALSE, mathjax = "cdn")) %>%
+          saveWidget(f)  # to show mathjax
+    # to show mathjax
+    tags$iframe(
+      src = file.path("tmp", basename(f)),
+      width = "100%", 
+      height = "400",
+      scrolling = "no", 
+      seamless = "seamless", 
+      frameBorder = "0"
     )
   })
   
-  # show the Analyze tab when user clicks the analyze button
-  observeEvent(input$go_analyze, updateTabsetPanel(session, "menu", selected = "Analyze"))
+  # jitter plots
+  output$jitter_intercept_plot <- renderPlotly({
+    if (is.null(rv$jitter_plot)) return()
+    return(rv$jitter_plot[[1]])
+  })
+  
+  output$jitter_slope1_plot <- renderPlotly({
+    if (is.null(rv$jitter_plot)) return()
+    return(rv$jitter_plot[[2]])
+  })
+  
+  output$jitter_slope2_plot <- renderPlotly({
+    if (is.null(rv$jitter_plot)) return()
+    return(rv$jitter_plot[[3]])
+  })
+  
+  output$jitter_breakpoint_plot <- renderPlotly({
+    if (is.null(rv$jitter_plot)) return()
+    return(rv$jitter_plot[[4]])
+  })
+  
+  output$jitter_AIC_plot <- renderPlotly({
+    if (is.null(rv$jitter_plot)) return()
+    return(rv$jitter_plot[[5]])
+  })
+
+  output$jitter_comp_plot <- renderPlotly({
+    if (is.null(rv$jitter_plot)) return()
+    return(rv$jitter_plot[[6]])
+  })
+  
+  # renders the predicted age data table from oto age fitting(downloadable)
+  output$predicted_age_preview <- renderDT(
+    rv$predicted_oto_age_data,
+    server = FALSE, # make sure it downloads all data, not just the ones in view
+    extensions = 'Buttons',
+    options = list(
+      dom = 'Bfrtip',
+      scrollX = TRUE,
+      buttons = 
+        list('copy', 'print', list(
+          extend = 'collection',
+          buttons = c('csv', 'excel'),
+          text = 'Download'
+        ))
+    ),
+    rownames = FALSE
+  )
+  
+  # create an age length data table, where age is predicted from otowt,
+  # and change tab focus to Length vs. Age Data tab
+  observeEvent(input$set_age_length_data, {
+    if (is.null(rv$oto_age_model)) {
+      showModal(modalDialog(
+        title = "Important message",
+        "You have not run an Age vs. Otolith Weight analysis.",
+        easyClose = TRUE
+      ))
+    } else {
+      data = rv$predicted_oto_age_data
+      colnames(data)[which(names(data) == "Predicted Ages")] = "Read1"
+      rv$age_length_data = data.frame("Sample" = data$Sample, "Species" = data$Species,
+                               "Area" = data$Area, "Sex" = data$Sex,
+                               "Length" = data$Length, "Read1" = data$Read1)
+      # show Length vs. Age Data tab
+      updateTabsetPanel(session, "menu", selected = "tab3")
+    }
+  })
+  
+  # oto-age model uploaded by user
+  observe({
+    req(input$model_oto_file)
+    model = try(readRDS(input$model_oto_file$datapath), silent = TRUE)
+    if (!("lm" %in% class(model))) {
+      invalid_upload()
+      shinyjs::reset("model_oto_file")
+    } else {
+      # qualified model object has class "lm" or c("lm", "segmented")
+      rv$existing_oto_age_model = model
+    }
+  })
+  
+  # oto file upload along side with existing_oto_age_model
+  observe({
+    req(input$oto_file)
+    data = try(read.csv(input$oto_file$datapath), silent = TRUE)
+    if (class(data)[[1]] == "try-error") {
+      invalid_upload()
+      shinyjs::reset("oto_file")
+    } else {
+      col_names_upload = colnames(data)
+      col_names = c("Sample", "Species", "Area", "Sex", "Length", "OtoWt")
+      if (!check_oto_age_file(col_names_upload, col_names)) {
+        invalid_upload()
+        shinyjs::reset("oto_file")
+      } else {
+        rv$oto_data = data
+      }
+    }
+  })
+  
+  # download a sample otowt data table for fitting ages with existing model
+  output$download_oto_data <- downloadHandler(
+    filename = "sample_oto_data_for_existing_model.csv",
+    content <- function(file) {
+      file.copy("sample_downloads/sample_oto_data_for_existing_model.csv", file)
+    }
+  )
+  
+  # download a sample otowt age model
+  output$download_oto_model <- downloadHandler(
+    filename = "sample_oto_age_model.rds",
+    content <- function(file) {
+      file.copy("sample_downloads/sample_oto_age_model.rds", file)
+    }
+  )
+  
+  # compute the predicted age data table using existing oto age model
+  observeEvent(input$run_existing_oto_model, {
+    if (is.null(rv$existing_oto_age_model) || is.null(rv$oto_data)) {
+      showModal(modalDialog(
+        title = "Important message",
+        "Please upload a file first.",
+        easyClose = TRUE
+      ))
+      return()
+    }
+    pred_ages = predict(rv$existing_oto_age_model, rv$oto_data)
+    rv$predicted_oto_age_data_from_exisiting = cbind(rv$oto_data, "Predicted Ages" = pred_ages)
+  })
+  
+  # renders the predicted age data table using existing oto age model
+  output$existing_model_predicted_data <- renderDT(
+    rv$predicted_oto_age_data_from_exisiting,
+    server = FALSE, # make sure it downloads all data, not just the ones in view
+    extensions = 'Buttons',
+    options = list(
+      dom = 'Bfrtip',
+      scrollX = TRUE,
+      buttons = 
+        list('copy', 'print', list(
+          extend = 'collection',
+          buttons = c('csv', 'excel'),
+          text = 'Download'
+        ))
+    ),
+    rownames = FALSE,
+    filter = 'top'
+  )
+  
+  observeEvent(input$set_age_length_data_from_existing_model, {
+    if (is.null(rv$predicted_oto_age_data_from_exisiting)) {
+      showModal(modalDialog(
+        title = "Important message",
+        "You have not produced predicted ages with your existing model.",
+        easyClose = TRUE
+      ))
+    } else {
+      data = rv$predicted_oto_age_data_from_exisiting[input$existing_model_predicted_data_rows_all, ]
+      colnames(data)[which(names(data) == "Predicted Ages")] = "Read1"
+      rv$age_length_data = data.frame("Sample" = data$Sample, "Species" = data$Species,
+                                      "Area" = data$Area, "Sex" = data$Sex,
+                                      "Length" = data$Length, "Read1" = data$Read1)
+      # show Length vs. Age Data tab
+      updateTabsetPanel(session, "menu", selected = "tab3")
+    }
+  })
+  
+  # creates control panel to select reads, areas, and sex
+  output$input_control <- renderUI({
+    if (!is.null(rv$age_length_data)) {
+      reads_choices = paste0("Read", seq_len(ncol(rv$age_length_data) - 5)) # only include the ReadX columns
+      area_choices = unique(rv$age_length_data$Area)
+      species_choices = unique(rv$age_length_data$Species)
+      tagList(
+        fluidRow(
+          column(4, 
+                 selectizeInput("reads_selected", "Reads to use", choices = reads_choices, selected = reads_choices, multiple = TRUE)
+          ),
+          column(4,
+                 selectizeInput("areas_selected", "Areas to use", choices = area_choices, selected = area_choices, multiple = TRUE)
+          ),
+          column(4, 
+                 selectizeInput("species_selected", "Species to use", choices = species_choices, selected = species_choices, multiple = TRUE)
+          )
+        ),
+        fluidRow(
+          column(3, selectInput("sex", "Sex", choices = c("Any", "F", "M"))),
+          column(3, actionButton("preview_data", "Preview Selected Data", 
+                                 icon = icon("wrench", lib = "glyphicon"), style = "margin-top:25px"))
+        )
+      ) 
+    }
+  })
+  
+  # show the Growth Curve Analysis tab when user clicks the analyze button
+  observeEvent(input$go_analyze, updateTabsetPanel(session, "menu", selected = "tab4"))
   
   # renders the selected/filtered data table (downloadable)
   output$selected_data <- renderDT(
     rv$selected_data,
+    server = FALSE, # make sure it downloads all data, not just the ones in view
     extensions = 'Buttons',
     options = list(
       dom = 'Bfrtip',
@@ -175,17 +653,19 @@ shinyServer(function(input, output, session) {
         easyClose = TRUE
       ))
     } else {
-      cols_to_use = c("Sample", "Area", "Sex", "Length", input$reads_selected)
+      cols_to_use = c("Sample", "Species", "Area", "Sex", "Length", sort(input$reads_selected))
       if (input$sex == "Any") {
-        rv$selected_data = subset(fish(), Area %in% input$areas_selected)
+        rv$selected_data = subset(rv$age_length_data, Area %in% input$areas_selected &
+                                   Species %in% input$species_selected)
       } else {
-        rv$selected_data = subset(fish(), Sex == input$sex & Area %in% input$areas_selected)
+        rv$selected_data = subset(rv$age_length_data, Sex == input$sex & 
+                                    Area %in% input$areas_selected & Species %in% input$species_selected)
       }
       rv$selected_data = rv$selected_data[cols_to_use]
       rv$last_run_type = NULL
       rv$last_re_run_type = NULL
       # swith to "Selected Data" tab
-      updateTabsetPanel(session, "data", selected = "Selected Data") 
+      updateTabsetPanel(session, "data", selected = "tab3-2") 
     }
   })
   
@@ -193,17 +673,17 @@ shinyServer(function(input, output, session) {
   output$selected_data_plot <- renderPlotly({
     # do not plot when the filtered data table is not ready
     if (is.null(rv$selected_data)) return()
-    plot(rv, NULL, "input", NULL)
+    plot_growth_curve(rv, "input", NULL)
   })
   
-  # show the Summaries tab when user clicks the summaries button
-  observeEvent(input$go_summaries, updateTabsetPanel(session, "menu", selected = "Summaries"))
+  # show the Growth Curve Summaries tab when user clicks the summaries button
+  observeEvent(input$go_summaries, updateTabsetPanel(session, "menu", selected = "tab5"))
   
   # creates a select menu for the select read choice in nonlinear fit model 
   # based on the available reads in the filtered data table
   output$selected_read <- renderUI({
     if (!is.null(rv$selected_data) && input$fit_data == "1 - Selected Read") {
-      reads_choices = names(rv$selected_data[c(-1, -2, -3, -4)])
+      reads_choices = names(rv$selected_data[c(-1, -2, -3, -4, -5)])
       tagList(
         helpText("Select a single read from the", em("filtered"), "data"),
         selectInput("read_selected", "Read to use", choices = reads_choices)
@@ -214,6 +694,7 @@ shinyServer(function(input, output, session) {
   # creates a downloadable summary table for estimation runs
   output$vb_summaries <- renderDT(
     rv$vb_summaries, extensions = 'Buttons',
+    server = FALSE, # make sure it downloads all data, not just the ones in view
     options = list(
       dom = 'Bfrtip',
       scrollX = TRUE,
@@ -229,6 +710,7 @@ shinyServer(function(input, output, session) {
   
   output$linear_summaries <- renderDT(
     rv$linear_summaries, extensions = 'Buttons',
+    server = FALSE, # make sure it downloads all data, not just the ones in view
     options = list(
       dom = 'Bfrtip',
       scrollX = TRUE,
@@ -244,6 +726,7 @@ shinyServer(function(input, output, session) {
 
   output$gompertz_summaries <- renderDT(
     rv$gompertz_summaries, extensions = 'Buttons',
+    server = FALSE, # make sure it downloads all data, not just the ones in view
     options = list(
       dom = 'Bfrtip',
       scrollX = TRUE,
@@ -259,6 +742,7 @@ shinyServer(function(input, output, session) {
 
   output$logistic_summaries <- renderDT(
     rv$logistic_summaries, extensions = 'Buttons',
+    server = FALSE, # make sure it downloads all data, not just the ones in view
     options = list(
       dom = 'Bfrtip',
       scrollX = TRUE,
@@ -274,6 +758,7 @@ shinyServer(function(input, output, session) {
 
   output$schnute_summaries <- renderDT(
     rv$schnute_summaries, extensions = 'Buttons',
+    server = FALSE, # make sure it downloads all data, not just the ones in view
     options = list(
       dom = 'Bfrtip',
       scrollX = TRUE,
@@ -287,17 +772,15 @@ shinyServer(function(input, output, session) {
     rownames = FALSE
   )
   
-  observe(rep_nls())
-  
-  # run estimates for a nonlinear model and returns a report as a dataframe
-  rep_nls <- eventReactive(input$run_nls, {
-    rv$test = rv$test + 1
+  # run estimates for a nonlinear model
+  observeEvent(input$run_nls, {
     if (!is.null(rv$selected_data)) {
-      num_reads = ncol(rv$selected_data) - 4
+      disable("age_len_std_control")
+      num_reads = ncol(rv$selected_data) - 5
       len = rv$selected_data$Length
       num = length(len)
       # age matrix: nrow = #reads, ncol = num
-      age = t(rv$selected_data[c(-1, -2, -3, -4)])
+      age = t(rv$selected_data[c(-1, -2, -3, -4, -5)])
       
       fit_data = strtoi(substring(input$fit_data, 1, 1))
       
@@ -315,7 +798,7 @@ shinyServer(function(input, output, session) {
         age_use = apply(age, 2, median)
       } else {
         # fit to multiple ages
-        data = melt(rv$selected_data, id = c("Sample", "Area", "Sex", "Length"))
+        data = melt(rv$selected_data, id = c("Sample", "Species", "Area", "Sex", "Length"))
         age_use = data$value
         len_use = data$Length
       }
@@ -333,7 +816,10 @@ shinyServer(function(input, output, session) {
             return(NULL)
           })
           # returs NULL if model didn't converge
-          if (is.null(model)) return(NULL)
+          if (is.null(model)) {
+            enable("age_len_std_control")
+            return()
+          }
           rep = summary(model)[["coefficients"]]
           newRow = format(data.frame("Run name" = runname, "Starting intercept" = NA, "Starting slope" = NA,
                      "Intercept mean" = rep[1,1], "Intercept Std" = rep[1,2], "Slope mean" = rep[2,1], "Slope Std" = rep[2,2],
@@ -352,8 +838,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
-          
+          if (is.null(opt)) {
+            enable("age_len_std_control")
+            return()
+          }
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting intercept" = intercept, "Starting slope" = slope,
                     "Intercept mean" = rep[1,1], "Intercept Std" = rep[1,2], "Slope mean" = rep[2,1], "Slope Std" = rep[2,2],
@@ -378,7 +866,10 @@ shinyServer(function(input, output, session) {
             return(NULL)
           })
           # returs NULL if model didn't converge
-          if (is.null(model)) return(NULL)
+          if (is.null(model)) {
+            enable("age_len_std_control")
+            return()
+          }
           rep = summary(model)[["parameters"]]
           newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
                     "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
@@ -394,7 +885,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
+          if (is.null(opt)) {
+            enable("age_len_std_control")
+            return()
+          }
           
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
@@ -420,7 +914,10 @@ shinyServer(function(input, output, session) {
             return(NULL)
           })
           # returs NULL if model didn't converge
-          if (is.null(model)) return(NULL)
+          if (is.null(model)) {
+            enable("age_len_std_control")
+            return()
+          }
           rep = summary(model)[["parameters"]]
           newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
                     "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
@@ -436,7 +933,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
+          if (is.null(opt)) {
+            enable("age_len_std_control")
+            return()
+          }
           
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b, "Starting k" = k, 
@@ -463,7 +963,10 @@ shinyServer(function(input, output, session) {
             return(NULL)
           })
           # returs NULL if model didn't converge
-          if (is.null(model)) return(NULL)
+          if (is.null(model)) {
+            enable("age_len_std_control")
+            return()
+          }
           rep = summary(model)[["parameters"]]
           newRow = format(data.frame("Run name" = runname, "Starting r0" = r0, "Starting b" = b,
                      "Starting k" = k, "Starting m" = m, "r0 mean" = rep[1,1], "r0 Std" = rep[1,2],
@@ -480,7 +983,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
+          if (is.null(opt)) {
+            enable("age_len_std_control")
+            return()
+          }
           
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting r0" = r0, "Starting b" = b, "Starting k" = k, 
@@ -509,7 +1015,10 @@ shinyServer(function(input, output, session) {
           })
           
           # returs NULL if model didn't converge
-          if (is.null(model)) return(NULL)
+          if (is.null(model)) {
+            enable("age_len_std_control")
+            return()
+          }
           
           rep = summary(model)[["parameters"]]
           newRow = format(data.frame("Run name" = runname, "Starting Linf" = linf, "Starting K" = kappa,
@@ -526,7 +1035,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
+          if (is.null(opt)) {
+            enable("age_len_std_control")
+            return()
+          }
           
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting Linf" = linf, "Starting K" = kappa,
@@ -536,15 +1048,15 @@ shinyServer(function(input, output, session) {
         }
         rv$vb_summaries = rbind(rv$vb_summaries, newRow)
       }
-      return(rep)
+      enable("age_len_std_control")
+      rv$rep_nls = rep
     }
   })
   
-  observe(rep_re())
-  # run estimates for a random effects model and returns a report as a dataframe
-  rep_re <- eventReactive(input$run_re, {
+  # run estimates for a random effects model
+  observeEvent(input$run_re, {
     if (!is.null(rv$selected_data)) {
-      
+      disable("age_len_re_control")
       updateTextInput(session, "start_x", value = "")
       updateTextInput(session, "start_y", value = "")
       updateTextInput(session, "end_x", value = "")
@@ -553,11 +1065,11 @@ shinyServer(function(input, output, session) {
       rv$get_start = FALSE
       rv$get_end = FALSE
       
-      num_reads = ncol(rv$selected_data) - 4
+      num_reads = ncol(rv$selected_data) - 5
       len = rv$selected_data$Length
       num = length(len)
       # age matrix: nrow = #reads, ncol = num
-      age = t(rv$selected_data[c(-1, -2, -3, -4)])
+      age = t(rv$selected_data[c(-1, -2, -3, -4, -5)])
       
       
       if (as.numeric(input$CV_e) < 0) {
@@ -600,8 +1112,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
-          
+          if (is.null(opt)) {
+            enable("age_len_re_control")
+            return()
+          }
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting intercept" = intercept, "Starting slope" = slope,
                    "Intercept mean" = rep[1,1], "Intercept Std" = rep[1,2], "Slope mean" = rep[2,1], "Slope Std" = rep[2,2],
@@ -618,8 +1132,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
-          
+          if (is.null(opt)) {
+            enable("age_len_re_control")
+            return()
+          }
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting intercept" = intercept, "Starting slope" = slope,
                    "Intercept mean" = rep[1,1], "Intercept Std" = rep[1,2], "Slope mean" = rep[2,1], "Slope Std" = rep[2,2],
@@ -637,8 +1153,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
-          
+          if (is.null(opt)) {
+            enable("age_len_re_control")
+            return()
+          }
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting intercept" = intercept, "Starting slope" = slope,
                    "Intercept mean" = rep[1,1], "Intercept Std" = rep[1,2], "Slope mean" = rep[2,1], "Slope Std" = rep[2,2],
@@ -665,8 +1183,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
-          
+          if (is.null(opt)) {
+            enable("age_len_re_control")
+            return()
+          }
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
                    "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
@@ -683,8 +1203,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
-          
+          if (is.null(opt)) {
+            enable("age_len_re_control")
+            return()
+          }
           rep = summary(sdreport(obj))
           newRow =format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
                   "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
@@ -702,8 +1224,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
-          
+          if (is.null(opt)) {
+            enable("age_len_re_control")
+            return()
+          }
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
                    "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
@@ -730,8 +1254,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
-          
+          if (is.null(opt)) {
+            enable("age_len_re_control")
+            return()
+          }
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
                    "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
@@ -748,8 +1274,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
-          
+          if (is.null(opt)) {
+            enable("age_len_re_control")
+            return()
+          }
           rep = summary(sdreport(obj))
           newRow =format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
                   "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
@@ -767,8 +1295,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
-          
+          if (is.null(opt)) {
+            enable("age_len_re_control")
+            return()
+          }
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
                    "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
@@ -796,8 +1326,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
-          
+          if (is.null(opt)) {
+            enable("age_len_re_control")
+            return()
+          }
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting r0" = r0, "Starting b" = b, "Starting k" = k, 
                    "Starting m" = m, "r0 mean" = rep[1,1], "r0 Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2], 
@@ -816,8 +1348,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
-          
+          if (is.null(opt)) {
+            enable("age_len_re_control")
+            return()
+          }
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting r0" = r0, "Starting b" = b, "Starting k" = k, 
                        "Starting m" = m, "r0 mean" = rep[1,1], "r0 Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2], 
@@ -836,8 +1370,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
-          
+          if (is.null(opt)) {
+            enable("age_len_re_control")
+            return()
+          }
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting r0" = r0, "Starting b" = b, "Starting k" = k, 
                    "Starting m" = m, "r0 mean" = rep[1,1], "r0 Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2], 
@@ -866,8 +1402,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
-          
+          if (is.null(opt)) {
+            enable("age_len_re_control")
+            return()
+          }
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting Linf" = linf, "Starting K" = kappa,
                    "Starting t0" = t0, "Linf mean" = rep[1,1], "Linf sd" = rep[1,2], "K mean" = rep[2,1], "K sd" = rep[2,2],
@@ -885,7 +1423,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
+          if (is.null(opt)) {
+            enable("age_len_re_control")
+            return()
+          }
           
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting Linf" = linf, "Starting K" = kappa,
@@ -905,7 +1446,10 @@ shinyServer(function(input, output, session) {
           opt = opt(obj, lower, upper)
           
           # return NULL if model didn't converge
-          if (is.null(opt)) return(NULL)
+          if (is.null(opt)) {
+            enable("age_len_re_control")
+            return()
+          }
           
           rep = summary(sdreport(obj))
           newRow = format(data.frame("Run name" = runname, "Starting Linf" = linf, "Starting K" = kappa,
@@ -916,21 +1460,21 @@ shinyServer(function(input, output, session) {
         rv$vb_summaries = rbind(rv$vb_summaries, newRow)
         rv$last_re_run = nrow(rv$vb_summaries)
       }
-      
-      return(rep)
+      enable("age_len_re_control")
+      rv$rep_re = rep
     }
   })
   
   # nonlinear fit plot
   output$ModelNLS_Plot <- renderPlotly({
-    if (is.null(rv$selected_data)) return()
-    plot(rv, rep_nls(), "analyze", "nls")
+    if (is.null(rv$selected_data) || is.null(rv$rep_nls)) return()
+    plot_growth_curve(rv, "analyze", "nls")
   })
   
   # random effects plot
   output$ModelRE_Plot <- renderPlotly({
-    if (is.null(rv$selected_data)) return()
-    plot(rv, rep_re(), "analyze", "re")
+    if (is.null(rv$selected_data) || is.null(rv$rep_re)) return()
+    plot_growth_curve(rv, "analyze", "re")
   })
   
   # alerts the computed z value when user clicks get z value button
@@ -969,48 +1513,48 @@ shinyServer(function(input, output, session) {
     rv$get_end = FALSE
     rv$get_start = TRUE
   })
-  
+
   observeEvent(input$get_end, {
     rv$get_start = FALSE
     rv$get_end = TRUE
   })
-  
+
   # populate endpoints coordinates with histogram bar coordinates
   # when user clicks on the bars
   observe({
     coords = event_data("plotly_click", source = "hist_RE")
     if (rv$get_start) {
       updateTextInput(session, "start_x", value = coords$x)
-      updateTextInput(session, "start_y", value = coords$y)   
+      updateTextInput(session, "start_y", value = coords$y)
     }
     if (rv$get_end) {
       updateTextInput(session, "end_x", value = coords$x)
-      updateTextInput(session, "end_y", value = coords$y) 
+      updateTextInput(session, "end_y", value = coords$y)
     }
   })
   
   # age random effects histogram
   output$hist_RE <- renderPlotly({
-    if (is.null(rv$selected_data) || is.null(rv$type)) return()
+    if (is.null(rv$selected_data) || is.null(rv$type) || is.null(rv$rep_re)) return()
     num = length(rv$selected_data$Length)
     last_re_run_type = rv$last_re_run_type
     if (last_re_run_type == "vb" || last_re_run_type == "gompertz" || last_re_run_type == "logistic") {
       if (rv$type == "exp") {
-        data = data.frame("Age" = rep_re()[6:(5+num), 1])
+        data = data.frame("Age" = rv$rep_re[6:(5+num), 1])
       } else {
-        data = data.frame("Age" = rep_re()[7:(6+num), 1])
+        data = data.frame("Age" = rv$rep_re[7:(6+num), 1])
       }
     } else if (last_re_run_type == "linear") {
       if (rv$type == "exp") {
-        data = data.frame("Age" = rep_re()[5:(4+num), 1])
+        data = data.frame("Age" = rv$rep_re[5:(4+num), 1])
       } else {
-        data = data.frame("Age" = rep_re()[6:(5+num), 1])
+        data = data.frame("Age" = rv$rep_re[6:(5+num), 1])
       }
     } else { # last_re_run_type == "schnute"
       if (rv$type == "exp") {
-        data = data.frame("Age" = rep_re()[7:(6+num), 1])
+        data = data.frame("Age" = rv$rep_re[7:(6+num), 1])
       } else {
-        data = data.frame("Age" = rep_re()[8:(7+num), 1])
+        data = data.frame("Age" = rv$rep_re[8:(7+num), 1])
       }
     }
 
@@ -1024,7 +1568,9 @@ shinyServer(function(input, output, session) {
     
     p = p + rv$z_plot_layer
     
-    ggplotly(p, tooltip = c("Age", "Count"), source = "hist_RE") %>% plotly::config(modeBarButtonsToRemove = 
+    ggplotly(p, tooltip = c("Age", "Count"), source = "hist_RE") %>%
+      layout(font = list(family = "'Times New Roman', 'arial', 'Raleway','verdana'")) %>% 
+      plotly::config(modeBarButtonsToRemove = 
       list("sendDataToCloud", "zoom2d", "pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d", "autoScale2d",
            "resetScale2d", "hoverCompareCartesian", "hoverClosestCartesian"), displaylogo = FALSE, collaborate = FALSE)
   })
