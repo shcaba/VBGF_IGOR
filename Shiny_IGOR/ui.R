@@ -1,5 +1,6 @@
 # shiny ui
-
+# set spinner color to green
+options(spinner.color = "#5cb935")
 appCSS <- "
 #loading-content {
 position: absolute;
