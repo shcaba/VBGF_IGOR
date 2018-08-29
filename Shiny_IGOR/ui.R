@@ -24,6 +24,8 @@ shinyUI(fluidPage(
   # Include javascript code to make shiny communicate with introJS
   includeScript("www/app.js"),
   
+  includeCSS("www/app.css"),
+  
   useShinyjs(),
   withMathJax(),
   inlineCSS(appCSS),
@@ -87,131 +89,123 @@ shinyUI(fluidPage(
                                     p("This analysis is not necessary if you have the age data prepared.",
                                       style = "margin-top:25px; font-size:15px"),
                                     tabsetPanel(id = "tab2_subpanel",
-                                      tabPanel("Run A New Otolith Weight vs. Age Model", value = "tab2-1",
-                                               fluidRow(
-                                                 column(4, 
-                                                        wellPanel(id = "oto_age_controls", style = "margin-top:25px",
-                                                                  selectInput("oto_age_model_type", "Model Type", 
-                                                                              choices = c("Linear", "Quadratic", "1-Breakpoint Piecewise", "2-Breakpoints Piecewise")),
-                                                                  conditionalPanel(
-                                                                    condition = "input.oto_age_model_type == '1-Breakpoint Piecewise'",
-                                                                    textInput("wt_bkpt1", "Otolith Weight Breakpoint 1")
-                                                                  ),
-                                                                  conditionalPanel(
-                                                                    condition = "input.oto_age_model_type == '2-Breakpoints Piecewise'",
-                                                                    fluidRow(
-                                                                      column(6, textInput("wt_bkpt1_2bp", "Otolith Weight Breakpoint 1")),
-                                                                      column(6, textInput("wt_bkpt2_2bp", "Otolith Weight Breakpoint 2"))
-                                                                    )
-                                                                  ),
-                                                                  conditionalPanel(
-                                                                    condition = "input.oto_age_model_type == '2-Breakpoints Piecewise' || 
+                                                tabPanel("Run A New Otolith Weight vs. Age Model", value = "tab2-1",
+                                                         fluidRow(
+                                                           column(4, 
+                                                                  wellPanel(id = "oto_age_controls", style = "margin-top:25px",
+                                                                            selectInput("oto_age_model_type", "Model Type", 
+                                                                                        choices = c("Linear", "Quadratic", "1-Breakpoint Piecewise", "2-Breakpoints Piecewise")),
+                                                                            conditionalPanel(
+                                                                              condition = "input.oto_age_model_type == '1-Breakpoint Piecewise'",
+                                                                              textInput("wt_bkpt1", "Otolith Weight Breakpoint 1")
+                                                                            ),
+                                                                            conditionalPanel(
+                                                                              condition = "input.oto_age_model_type == '2-Breakpoints Piecewise'",
+                                                                              fluidRow(
+                                                                                column(6, textInput("wt_bkpt1_2bp", "Otolith Weight Breakpoint 1")),
+                                                                                column(6, textInput("wt_bkpt2_2bp", "Otolith Weight Breakpoint 2"))
+                                                                              )
+                                                                            ),
+                                                                            conditionalPanel(
+                                                                              condition = "input.oto_age_model_type == '2-Breakpoints Piecewise' || 
                                                   input.oto_age_model_type == '1-Breakpoint Piecewise'",
-                                                                    checkboxInput("use_quantile", "Use quantile to set breakpoints"),
-                                                                    helpText("When quantile is checked, enter number(s) between 0 to 1 to set weight breakpoint(s)"),
-                                                                    checkboxInput("add_length", "Add Length", value = FALSE),
-                                                                    conditionalPanel(
-                                                                      condition = "input.oto_age_model_type == '1-Breakpoint Piecewise' && input.add_length == true",
-                                                                      textInput("lt_bkpt1", "Length Breakpoint 1")
-                                                                    ),
-                                                                    conditionalPanel(
-                                                                      condition = "input.oto_age_model_type == '2-Breakpoints Piecewise' && input.add_length == true",
-                                                                      fluidRow(
-                                                                        column(6, textInput("lt_bkpt1_2bp", "Length Breakpoint 1")),
-                                                                        column(6, textInput("lt_bkpt2_2bp", "Length Breakpoint 2"))
-                                                                      )
-                                                                    ),
-                                                                    checkboxInput("jitter", "Jitter"),
-                                                                    conditionalPanel(
-                                                                      condition = "input.jitter == true",
-                                                                      numericInput("num_jitter", "Number of times", 5, min = 1, max = 100)
-                                                                    )
-                                                                  ),
-                                                                  actionButton("run_oto_age", "Predict Ages", icon("stats", lib = "glyphicon"))
-                                                        )
-                                                 ),
-                                                 column(8, 
-                                                        tabsetPanel(id = "oto_age_menu",
-                                                                    tabPanel("Input Data", value = "tab2-1-1",
-                                                                             DTOutput("oto_age_data")
-                                                                    ),
-                                                                    tabPanel("Summary & Plot", value = "tab2-1-2",
-                                                                             p("You can", downloadButton("download_oto_age_model", "Download This Model"), "for future use.",
-                                                                               style = "margin-top:25px"),
-                                                                             tableOutput("oto_age_summary"),
-                                                                             fluidRow(
-                                                                               column(6, tableOutput("brkpt_summary")),
-                                                                               column(6, tableOutput("intercept_summary"))
-                                                                             ),
-                                                                             tableOutput("slope_summary"),
-                                                                             helpText("The plot legend label \"Selected\" represents the filtered data points and \"Not Selected\"
-                                                                                      represents the data left out."),
-                                                                             withSpinner(uiOutput("oto_age_plot")),
-                                                                             # these 6 plots only available for 1-breakpoint jitter model
-                                                                             fluidRow(
-                                                                               column(6, withSpinner(plotlyOutput("jitter_intercept_plot"))),
-                                                                               column(6, withSpinner(plotlyOutput("jitter_breakpoint_plot")))
-                                                                             ),
-                                                                             fluidRow(
-                                                                               column(6, withSpinner(plotlyOutput("jitter_slope1_plot"))),
-                                                                               column(6, withSpinner(plotlyOutput("jitter_slope2_plot")))
-                                                                             ),
-                                                                             fluidRow(
-                                                                               column(6, withSpinner(plotlyOutput("jitter_AIC_plot"))),
-                                                                               column(6, withSpinner(plotlyOutput("jitter_comp_plot")))
-                                                                             )
-                                                                    ),
-                                                                    tabPanel("Fitted Values", value = "tab2-1-3",
-                                                                       div(id = "step1-3",
-                                                                           p("You can view the predicted ages from the chosen model. If this table looks good, 
-                                                                                    you may want to", actionButton("set_age_length_data", 
-                                                                                      "Use Current Model to Predict Ages for Growth Fitting",
-                                                                                      icon = icon("wrench", lib = "glyphicon")), ".",
-                                                                             style = "margin-top:25px"
-                                                                           ),
-                                                                           DTOutput("predicted_age_preview")
-                                                                       )
-                                                                    )
-                                                        )
-                                                 )
-                                               )       
-                                      ),
-                                      tabPanel("Use An Existing Otolith Weight vs. Age Model", value = "tab2-2",
-                                          fluidRow(
-                                            column(4,
-                                                   wellPanel(id = "oto_model_upload",style = "margin-top:25px",
-                                                     h4(strong("Using Existing Otolith-Age Relationaship To Predict Ages")),
-                                                     fileInput("oto_file", "Choose CSV File for your data",
-                                                               multiple = FALSE,
-                                                               accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")),
-                                                     downloadButton("download_oto_data", "Download Sample Data File", style = "margin-bottom:25px"),
-                                                     fileInput("model_oto_file", "Choose RDS File for your model",
-                                                               multiple = FALSE,
-                                                               accept = c(".rds")),
-                                                     downloadButton("download_oto_model", "Download Sample Model File"),
-                                                     helpText("If you have an rds object that models the age and otolith weight relationship and want to predict
+                                                                              checkboxInput("use_quantile", "Use quantile to set breakpoints"),
+                                                                              helpText("When quantile is checked, enter number(s) between 0 to 1 to set weight breakpoint(s)"),
+                                                                              checkboxInput("jitter", "Jitter"),
+                                                                              conditionalPanel(
+                                                                                condition = "input.jitter == true",
+                                                                                numericInput("num_jitter", "Number of times", 5, min = 1, max = 100)
+                                                                              )
+                                                                            ),
+                                                                            actionButton("run_oto_age", "Predict Ages", icon("stats", lib = "glyphicon"))
+                                                                  )
+                                                           ),
+                                                           column(8, 
+                                                                  fluidRow(style = "margin-top: 25px",
+                                                                           tabsetPanel(id = "oto_age_menu",
+                                                                                       tabPanel("Input Data", value = "tab2-1-1",
+                                                                                                DTOutput("oto_age_data")
+                                                                                       ),
+                                                                                       tabPanel("Summary & Plot", value = "tab2-1-2",
+                                                                                                p("You can", downloadButton("download_oto_age_model", "Download This Model"), "for future use.",
+                                                                                                  style = "margin-top:25px"),
+                                                                                                tableOutput("oto_age_summary"),
+                                                                                                tableOutput("brkpt_summary"),
+                                                                                                fluidRow(
+                                                                                                  column(6, tableOutput("intercept_summary")),
+                                                                                                  column(6, tableOutput("slope_summary"))
+                                                                                                ),
+                                                                                                helpText("The plot legend label \"Selected\" represents the filtered data points and \"Not Selected\"
+                                                                                    represents the data left out."),
+                                                                                                withSpinner(uiOutput("oto_age_plot")),
+                                                                                                # these 6 plots only available for 1-breakpoint jitter model
+                                                                                                fluidRow(
+                                                                                                  column(6, withSpinner(plotlyOutput("jitter_intercept_plot"))),
+                                                                                                  column(6, withSpinner(plotlyOutput("jitter_breakpoint_plot")))
+                                                                                                ),
+                                                                                                fluidRow(
+                                                                                                  column(6, withSpinner(plotlyOutput("jitter_slope1_plot"))),
+                                                                                                  column(6, withSpinner(plotlyOutput("jitter_slope2_plot")))
+                                                                                                ),
+                                                                                                fluidRow(
+                                                                                                  column(6, withSpinner(plotlyOutput("jitter_AIC_plot"))),
+                                                                                                  column(6, withSpinner(plotlyOutput("jitter_comp_plot")))
+                                                                                                )
+                                                                                       ),
+                                                                                       tabPanel("Fitted Values", value = "tab2-1-3",
+                                                                                                div(id = "step1-3",
+                                                                                                    p("You can view the predicted ages from the chosen model. If this table looks good, 
+                                                                                 you may want to", actionButton("set_age_length_data", 
+                                                                                                                "Use Current Model to Predict Ages for Growth Fitting",
+                                                                                                                icon = icon("wrench", lib = "glyphicon")), ".",
+                                                                                                      style = "margin-top:25px"
+                                                                                                    ),
+                                                                                                    DTOutput("predicted_age_preview")
+                                                                                                )
+                                                                                       )
+                                                                           )
+                                                                  )
+                                                           )
+                                                         )       
+                                                ),
+                                                tabPanel("Use An Existing Otolith Weight vs. Age Model", value = "tab2-2",
+                                                         fluidRow(
+                                                           column(4,
+                                                                  wellPanel(id = "oto_model_upload",style = "margin-top:25px",
+                                                                            h4(strong("Using Existing Otolith-Age Relationaship To Predict Ages")),
+                                                                            fileInput("oto_file", "Choose CSV File for your data",
+                                                                                      multiple = FALSE,
+                                                                                      accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv")),
+                                                                            downloadButton("download_oto_data", "Download Sample Data File", style = "margin-bottom:25px"),
+                                                                            fileInput("model_oto_file", "Choose RDS File for your model",
+                                                                                      multiple = FALSE,
+                                                                                      accept = c(".rds")),
+                                                                            downloadButton("download_oto_model", "Download Sample Model File"),
+                                                                            helpText("If you have an rds object that models the age and otolith weight relationship and want to predict
                                                               ages for fish with known otolith weight, upload two files here.
                                                               Refer to the sample files for the data format."),
-                                                     actionButton("run_existing_oto_model", "Predict Ages with Existing Model", icon("stats", lib = "glyphicon"))
-                                                   )
-                                            ),
-                                            column(8,
-                                              tabsetPanel(
-                                                tabPanel("Fitted Values",
-                                                  div(id = "step1-5",
-                                                      p("You can view the predicted ages from your uploaded model. If this table looks good, 
-                                                       you may want to", actionButton("set_age_length_data_from_existing_model", 
-                                                                                      "Use Current Model to Predict Ages for Growth Fitting",
-                                                                                      icon = icon("wrench", lib = "glyphicon")), ".",
-                                                        style = "margin-top:25px"
-                                                      ),
-                                                      DTOutput("existing_model_predicted_data")
-                                                  )
+                                                                            actionButton("run_existing_oto_model", "Predict Ages with Existing Model", icon("stats", lib = "glyphicon"))
+                                                                  )
+                                                           ),
+                                                           column(8,
+                                                                  fluidRow(style = "margin-top: 25px",
+                                                                           tabsetPanel(
+                                                                             tabPanel("Fitted Values",
+                                                                                      div(id = "step1-5",
+                                                                                          p("You can view the predicted ages from your uploaded model. If this table looks good, 
+                                                                 you may want to", actionButton("set_age_length_data_from_existing_model", 
+                                                                                                "Use Current Model to Predict Ages for Growth Fitting",
+                                                                                                icon = icon("wrench", lib = "glyphicon")), ".",
+                                                                                            style = "margin-top:25px"
+                                                                                          ),
+                                                                                          DTOutput("existing_model_predicted_data")
+                                                                                      )
+                                                                             )
+                                                                           )
+                                                                  )
+                                                           )
+                                                         )     
                                                 )
-                                              )
-                                            )
-                                          )     
-                                      )
                                     )
                            ),
                            tabPanel("Length vs. Age Data", icon = icon("list", lib = "glyphicon"), value = "tab3",
@@ -220,19 +214,19 @@ shinyUI(fluidPage(
                                         style = "margin-top:25px; font-size:15px"),
                                       tabsetPanel(id = "data",
                                                   tabPanel("Input Data", value = "tab3-1",
-                                                     div(id = "step2-2",
-                                                       uiOutput("input_control"),
-                                                       DTOutput("input_data")
-                                                     )
+                                                           div(id = "step2-2",
+                                                               uiOutput("input_control"),
+                                                               DTOutput("input_data")
+                                                           )
                                                   ),
                                                   tabPanel("Selected Data", value = "tab3-2",
-                                                     div(id = "step2-3",
-                                                         p("When you are ready, go to the", 
-                                                           actionButton("go_analyze", "Growth Curve Analysis", icon = icon("hourglass", lib = "glyphicon")), "tab", 
-                                                           style = "margin-top:25px; font-size:15px")  
-                                                     ),
-                                                     withSpinner(plotlyOutput("selected_data_plot")),
-                                                     DTOutput("selected_data")
+                                                           div(id = "step2-3",
+                                                               p("When you are ready, go to the", 
+                                                                 actionButton("go_analyze", "Growth Curve Analysis", icon = icon("hourglass", lib = "glyphicon")), "tab", 
+                                                                 style = "margin-top:25px; font-size:15px")  
+                                                           ),
+                                                           withSpinner(plotlyOutput("selected_data_plot")),
+                                                           DTOutput("selected_data")
                                                   )
                                       )
                                     )
@@ -390,40 +384,40 @@ shinyUI(fluidPage(
                                                            column(8,
                                                                   fluidRow(style = "margin-top:25px",
                                                                            tabsetPanel(id = "re_results",
-                                                                             tabPanel("Plot", value = "tab4-2-1", withSpinner(plotlyOutput("ModelRE_Plot"))),
-                                                                             tabPanel("Estimate Z", value = "tab4-2-2",
-                                                                                      p("Estimate the Z value based on the age random effects. Typically, choose the
+                                                                                       tabPanel("Plot", value = "tab4-2-1", withSpinner(plotlyOutput("ModelRE_Plot"))),
+                                                                                       tabPanel("Estimate Z", value = "tab4-2-2",
+                                                                                                p("Estimate the Z value based on the age random effects. Typically, choose the
                                                                               coordinates of the tallest bar in the histogram as one of the end points. Click
                                                                               Choose Start/Choose End to select coordinates of the histogram bars or manually
                                                                               enter values for the end points."),
-                                                                                      wellPanel(id = "z_value_control",
-                                                                                        fluidRow(
-                                                                                          column(9, 
-                                                                                                 fluidRow(
-                                                                                                   column(3, actionButton("get_start", "Choose Start", style = "margin-top:25px")),
-                                                                                                   column(4, textInput("start_x", "Start X Coordinate")),
-                                                                                                   column(4, textInput("start_y", "Start Y Coordinate"))
-                                                                                                 ),
-                                                                                                 fluidRow(
-                                                                                                   column(3, actionButton("get_end", "Choose End", style = "margin-top:25px")),
-                                                                                                   column(4, textInput("end_x", "End X Coordinate")),
-                                                                                                   column(4, textInput("end_y", "End Y Coordinate"))
-                                                                                                 )
-                                                                                          ),
-                                                                                          column(3, 
-                                                                                                 helpText("Get Z Value and update the most", em("recent RE model"), "summary"),
-                                                                                                 actionButton("get_z", "Get Z"),
-                                                                                                 textOutput("z_value")
-                                                                                          )
-                                                                                        ),
-                                                                                        sliderInput(inputId = "bins",
-                                                                                                    label = "Number of bins:",
-                                                                                                    min = 1,
-                                                                                                    max = 50,
-                                                                                                    value = 30)
-                                                                                      ),
-                                                                                      withSpinner(plotlyOutput("hist_RE"))  
-                                                                             )
+                                                                                                wellPanel(id = "z_value_control",
+                                                                                                          fluidRow(
+                                                                                                            column(9, 
+                                                                                                                   fluidRow(
+                                                                                                                     column(3, actionButton("get_start", "Choose Start", style = "margin-top:25px")),
+                                                                                                                     column(4, textInput("start_x", "Start X Coordinate")),
+                                                                                                                     column(4, textInput("start_y", "Start Y Coordinate"))
+                                                                                                                   ),
+                                                                                                                   fluidRow(
+                                                                                                                     column(3, actionButton("get_end", "Choose End", style = "margin-top:25px")),
+                                                                                                                     column(4, textInput("end_x", "End X Coordinate")),
+                                                                                                                     column(4, textInput("end_y", "End Y Coordinate"))
+                                                                                                                   )
+                                                                                                            ),
+                                                                                                            column(3, 
+                                                                                                                   helpText("Get Z Value and update the most", em("recent RE model"), "summary"),
+                                                                                                                   actionButton("get_z", "Get Z"),
+                                                                                                                   textOutput("z_value")
+                                                                                                            )
+                                                                                                          ),
+                                                                                                          sliderInput(inputId = "bins",
+                                                                                                                      label = "Number of bins:",
+                                                                                                                      min = 1,
+                                                                                                                      max = 50,
+                                                                                                                      value = 30)
+                                                                                                ),
+                                                                                                withSpinner(plotlyOutput("hist_RE"))  
+                                                                                       )
                                                                            )
                                                                   )
                                                                   
