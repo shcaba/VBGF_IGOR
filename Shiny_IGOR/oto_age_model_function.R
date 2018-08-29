@@ -1,63 +1,35 @@
 # Computes a piecewise model for the given data
 # data: dataframe with OtoWt and Age columns at least
 # jitter: number of times to jitter
-# wt_brkpts: vector of initial guess for breakpoints by otolith weight, length(wt_brkpts) = # brkpts
-# lt_brkpts: vector of initial guess for breakpoints by otolith weight, used when add_lengths = TRUE
+# wt_brkpts: vector of initial guess for breakpoints by otolith weight
 # returns a piecewise model of the given data, returns NULL on error
-oto_age_model <- function(data, wt_brkpts = c(0, 0), lt_brkpts = c(0, 0), jitter = 0, add_lengths = FALSE) {
+oto_age_model <- function(data, wt_brkpts = c(0, 0), jitter = 0) {
   # list of piecewise models of size jitter
   jitters = list()
   i = 0
   
-  if (add_lengths) {
-    # computes the linear model later used for piecewise model
-    linear_model = try(lm(Age ~ Length + OtoWt, data = data), silent = TRUE)
-    if (class(linear_model)[[1]] == "try-error") {
-      return(NULL)
-    }
-    if (jitter > 0) {
-      for (j in 1 : jitter) {
-        jitters[[j]] = try(segmented(linear_model, seg.Z = ~OtoWt + Length, 
-                                    psi = list(OtoWt = wt_brkpts, Length = lt_brkpts), jt = TRUE), silent = TRUE)
-        if (class(jitters[[j]])[1] == "try-error") {
-          # discard missing values in finding minmum model AIC later
-          jitters[[j]] = NA
-        }
-      }
-      # choose the model with minimum AIC
-      piecewise_model = try(jitters[[which.min(sapply(jitters, AIC))]], silent = TRUE)
-    } else {
-      repeat{
-        piecewise_model = try(segmented(linear_model, seg.Z = ~OtoWt + Length, 
-                                    psi = list(OtoWt = wt_brkpts, Length = lt_brkpts)), silent = TRUE)
-        i = i + 1
-        if (class(piecewise_model)[1] != "try-error" || i >= 10) break
+  # computes the linear model later used for piecewise model
+  linear_model = try(lm(Age ~ OtoWt, data = data), silent = TRUE)
+  
+  if (class(linear_model)[[1]] == "try-error") {
+    return(NULL)
+  }
+  
+  if (jitter > 0) {
+    for (j in 1 : jitter) {
+      jitters[[j]] = try(segmented(linear_model, seg.Z = ~OtoWt, psi = wt_brkpts, jt = TRUE), silent = TRUE)
+      if (class(jitters[[j]])[1] == "try-error") {
+        # discard missing values in finding minmum model AIC later
+        jitters[[j]] = NA
       }
     }
+    # choose the model with minimum AIC
+    piecewise_model = try(jitters[[which.min(sapply(jitters, AIC))]], silent = TRUE)
   } else {
-    # computes the linear model later used for piecewise model
-    linear_model = try(lm(Age ~ OtoWt, data = data), silent = TRUE)
-    
-    if (class(linear_model)[[1]] == "try-error") {
-      return(NULL)
-    }
-    
-    if (jitter > 0) {
-      for (j in 1 : jitter) {
-        jitters[[j]] = try(segmented(linear_model, seg.Z = ~OtoWt, psi = wt_brkpts, jt = TRUE), silent = TRUE)
-        if (class(jitters[[j]])[1] == "try-error") {
-          # discard missing values in finding minmum model AIC later
-          jitters[[j]] = NA
-        }
-      }
-      # choose the model with minimum AIC
-      piecewise_model = try(jitters[[which.min(sapply(jitters, AIC))]], silent = TRUE)
-    } else {
-      repeat{
-        piecewise_model = try(segmented(linear_model, seg.Z = ~OtoWt, psi = wt_brkpts), silent = TRUE)
-        i = i + 1
-        if (class(piecewise_model)[1] != "try-error" || i >= 10) break
-      }
+    repeat{
+      piecewise_model = try(segmented(linear_model, seg.Z = ~OtoWt, psi = wt_brkpts), silent = TRUE)
+      i = i + 1
+      if (class(piecewise_model)[1] != "try-error" || i >= 10) break
     }
   }
   
@@ -74,7 +46,7 @@ oto_age_model <- function(data, wt_brkpts = c(0, 0), lt_brkpts = c(0, 0), jitter
 # p: ggplot2 object
 # returns a plotly object that has unnecessary buttons removed
 clean_plot <- function(p) {
-  l = list(orientation = "h", x = 0, y = 0)
+  l = list(orientation = "h", x = 0, y = 0) # horizontal legends on the bottom
   return(ggplotly(p, tooltip = c("x", "y", "yintercept")) %>%  
            layout(font = list(family = "'Times New Roman', 'arial', 'Raleway','verdana'"),
                   legend = l) %>%

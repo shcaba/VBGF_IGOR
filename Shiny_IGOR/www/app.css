@@ -1,0 +1,32 @@
+/* tab color green */
+a {
+  color: #5cb935;
+  text-decoration: none;
+}
+
+/* tab hover color a darker green */
+a:hover,
+a:focus {
+  color: #306518;
+  text-decoration: underline;
+}
+
+.progress-bar {
+  background-color: #5ab733;
+}
+
+/* green slide bar */
+.irs-bar {
+    border-top: 1px solid #5cb935;
+    border-bottom: 1px solid #5cb935;
+    background: #5cb935;
+}
+
+.irs-bar-edge {
+    border: 1px solid #5cb935;
+    background: #5cb935;
+}
+
+.irs-from, .irs-to, .irs-single {
+    background: #5cb935;
+}

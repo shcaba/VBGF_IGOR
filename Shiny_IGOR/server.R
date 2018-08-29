@@ -265,7 +265,6 @@ shinyServer(function(input, output, session) {
       rv$oto_age_data_filter_info = cbind(rv$oto_age_data, "Selected" = Selected)
       
       plot_jitter = FALSE
-      add_lengths = FALSE
       
       rv$oto_age_model_name = input$oto_age_model_type
       
@@ -300,10 +299,7 @@ shinyServer(function(input, output, session) {
           } else {
             wt_brkpts = c(as.numeric(input$wt_bkpt1))
           }
-          if (input$add_length) {
-            lt_brkpts = c(as.numeric(input$lt_bkpt1))
-            add_lengths = TRUE
-          }
+          
         } else { # rv$oto_age_model_name == "2-Breakpoints Piecewise"
           names = c("Breakpoint 1", "Breakpoint 2")
           if (input$use_quantile) {
@@ -319,10 +315,6 @@ shinyServer(function(input, output, session) {
           } else {
             wt_brkpts = c(as.numeric(input$wt_bkpt1_2bp), as.numeric(input$wt_bkpt2_2bp))  
           }
-          if (input$add_length) {
-            lt_brkpts = c(as.numeric(input$lt_bkpt1_2bp), as.numeric(input$lt_bkpt2_2bp))
-            add_lengths = TRUE
-          }
         }
         
         if (input$jitter) {
@@ -333,8 +325,7 @@ shinyServer(function(input, output, session) {
         } else {
           jitter = 0
         }
-        model = oto_age_model(oto_age_data_filtered, wt_brkpts = wt_brkpts, lt_brkpts = lt_brkpts, 
-                              jitter = jitter, add_lengths = add_lengths)
+        model = oto_age_model(oto_age_data_filtered, wt_brkpts = wt_brkpts, jitter = jitter)
         
         if (is.null(model)) {
           convg_err()
@@ -378,9 +369,10 @@ shinyServer(function(input, output, session) {
   })
   
   # prints oto age analysis summaries
-  output$oto_age_summary <- renderTable(rv$oto_age_summary, rownames = TRUE, digits = 4)
+  output$oto_age_summary <- renderTable(rv$oto_age_summary[,c(1, 2)], rownames = TRUE, digits = 4)
   output$brkpt_summary <- renderTable(rv$brkpt_summary, rownames = TRUE, digits = 4)
-  output$slope_summary <- renderTable(rv$slope_summary, rownames = TRUE, digits = 4)
+  # [[1]] is used to signal the variable OtoWt, c(1,2) only keeps the estimation and stderr
+  output$slope_summary <- renderTable(rv$slope_summary[[1]][,c(1, 2)], rownames = TRUE, digits = 4)
   output$intercept_summary <- renderTable(rv$intercept_summary, rownames = TRUE, digits = 4)
   
   # renders the oto age plot and the model fit
