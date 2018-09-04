@@ -5,7 +5,7 @@ addResourcePath("tmp", tempdir())
 f = tempfile(fileext = ".html")
 
 shinyServer(function(input, output, session) {
-
+  
   hide(id = "loading-content", anim = TRUE, animType = "fade")    
   show("app-content")
   
@@ -14,56 +14,56 @@ shinyServer(function(input, output, session) {
     indTab = NULL
     nextPage = NULL
     
-      # Index help data into right tab
-      if (input$menu == "tab1") {
-        indTab = c(1, 2)
-        nextPage = nextPage = c("tab2", "tab2-1")
+    # Index help data into right tab
+    if (input$menu == "tab1") {
+      indTab = c(1, 2)
+      nextPage = nextPage = c("tab2", "tab2-1")
+    }
+    if (input$menu == "tab2" && input$tab2_subpanel == "tab2-1") {
+      if (input$oto_age_menu == "tab2-1-1") {
+        indTab = 3
+        nextPage = c("tab2", "tab2-1", "tab2-1-3")
       }
-      if (input$menu == "tab2" && input$tab2_subpanel == "tab2-1") {
-        if (input$oto_age_menu == "tab2-1-1") {
-          indTab = 3
-          nextPage = c("tab2", "tab2-1", "tab2-1-3")
-        }
-        if (input$oto_age_menu == "tab2-1-3") {
-          indTab = 4
-          nextPage = c("tab2", "tab2-2", "tab2-1-1") #tab2-1-1 reset very necessary!!!
-        }
+      if (input$oto_age_menu == "tab2-1-3") {
+        indTab = 4
+        nextPage = c("tab2", "tab2-2", "tab2-1-1") #tab2-1-1 reset very necessary!!!
       }
-      if (input$menu == "tab2" && input$tab2_subpanel == "tab2-2") {
-        indTab = c(5, 6)
-        nextPage = c("tab3", "tab3-1")
+    }
+    if (input$menu == "tab2" && input$tab2_subpanel == "tab2-2") {
+      indTab = c(5, 6)
+      nextPage = c("tab3", "tab3-1")
+    }
+    if (input$menu == "tab3") {
+      if(input$data == "tab3-1") {
+        indTab = 7
+        nextPage = c("tab3", "tab3-2")
+      } else {
+        indTab = 8
+        nextPage = c("tab4", "tab4-1")
       }
-      if (input$menu == "tab3") {
-        if(input$data == "tab3-1") {
-          indTab = 7
-          nextPage = c("tab3", "tab3-2")
-        } else {
-          indTab = 8
-          nextPage = c("tab4", "tab4-1")
-        }
+    }
+    if (input$menu == "tab4" && input$fit_choice == "tab4-1") {
+      indTab = 9
+      nextPage = c("tab4", "tab4-2")
+    }
+    if (input$menu == "tab4" && input$fit_choice == "tab4-2") {
+      if (input$re_results == "tab4-2-2") {
+        indTab = 11
+        nextPage = c("tab5", "tab4-2-1") #tab4-2-1 reset very necessary!!!
+      } else {
+        indTab = 10
+        nextPage = c("tab4", "tab4-2", "tab4-2-2")
       }
-      if (input$menu == "tab4" && input$fit_choice == "tab4-1") {
-        indTab = 9
-        nextPage = c("tab4", "tab4-2")
-      }
-      if (input$menu == "tab4" && input$fit_choice == "tab4-2") {
-        if (input$re_results == "tab4-2-2") {
-          indTab = 11
-          nextPage = c("tab5", "tab4-2-1") #tab4-2-1 reset very necessary!!!
-        } else {
-          indTab = 10
-          nextPage = c("tab4", "tab4-2", "tab4-2-2")
-        }
-      } 
-      if (input$menu == "tab5") {
-        indTab = 12
-        nextPage = "tab1"
-      }
-      # set help content
-      if (!is.null(indTab) && !is.null(nextPage)) {
-        session$sendCustomMessage(type = 'setHelpContent', message = list(steps = toJSON(helpData[indTab, ]),
-              nextPage = toJSON(nextPage)))  
-      }
+    } 
+    if (input$menu == "tab5") {
+      indTab = 12
+      nextPage = "tab1"
+    }
+    # set help content
+    if (!is.null(indTab) && !is.null(nextPage)) {
+      session$sendCustomMessage(type = 'setHelpContent', message = list(steps = toJSON(helpData[indTab, ]),
+                                                                        nextPage = toJSON(nextPage)))  
+    }
   })
   
   observeEvent(input$startHelp,{
@@ -96,10 +96,10 @@ shinyServer(function(input, output, session) {
     
     # summary table for growth curve estimation runs
     vb_summaries = data.frame("Run name" = character(), "Starting Linf" = double(), "Starting K" = double(),
-                           "Starting t0" = double(), "Linf mean" = double(), "Linf sd" = double(), "K mean" = double(), "K sd" = double(),
-                           "t0 mean" = double(), "t0 sd" = double(), "CV Length Error" = double(), "CV Age Error" = double(),
-                           "alpha" = double(), "sigma" = double(), "beta" = double(), "shape" = double(), "scale" = double(), "z" = double(),
-                           check.names = FALSE),
+                              "Starting t0" = double(), "Linf mean" = double(), "Linf sd" = double(), "K mean" = double(), "K sd" = double(),
+                              "t0 mean" = double(), "t0 sd" = double(), "CV Length Error" = double(), "CV Age Error" = double(),
+                              "alpha" = double(), "sigma" = double(), "beta" = double(), "shape" = double(), "scale" = double(), "z" = double(),
+                              check.names = FALSE),
     schnute_summaries = data.frame("Run name" = character(), "Starting r0" = double(), "Starting b" = double(), "Starting k" = double(), 
                                    "Starting m" = double(), "r0 mean" = double(), "r0 Std" = double(), "b mean" = double(), "b Std" = double(), 
                                    "k mean" = double(), "k Std" = double(), "m mean" = double(), "m Std" = double(), "CV Length Error" = double(), 
@@ -227,9 +227,15 @@ shinyServer(function(input, output, session) {
   })
   
   # show the Age vs. Otolith Weight Data tab
-  observeEvent(input$go_oto_age, updateTabsetPanel(session, "menu", selected = "tab2"))
+  observeEvent(input$go_oto_age, {
+    updateTabsetPanel(session, "menu", selected = "tab2")
+    updateTabsetPanel(session, "tab2_subpanel", selected = "tab2-1")
+  })
   # show the Length vs. Age Data tab
-  observeEvent(input$go_age_length, updateTabsetPanel(session, "menu", selected = "tab3"))
+  observeEvent(input$go_age_length, {
+    updateTabsetPanel(session, "menu", selected = "tab3")
+    updateTabsetPanel(session, "data", selected = "tab3-1")
+  })
   
   # renders the original otowt age data table uploaded by user
   output$oto_age_data <- renderDT(
@@ -303,15 +309,15 @@ shinyServer(function(input, output, session) {
         } else { # rv$oto_age_model_name == "2-Breakpoints Piecewise"
           names = c("Breakpoint 1", "Breakpoint 2")
           if (input$use_quantile) {
-           q1 = as.numeric(input$wt_bkpt1_2bp)
-           q2 = as.numeric(input$wt_bkpt2_2bp)
-           if (q1 < 0 || q1 > 1 || q2 < 0 || q2 > 1) {
-             invalid_quantile()
-             enable("oto_age_controls")
-             return()
-           }
-           wt_brkpts = c(quantile(oto_age_data_filtered$OtoWt, q1, na.rm = TRUE), 
-                         quantile(oto_age_data_filtered$OtoWt, q2, na.rm = TRUE))
+            q1 = as.numeric(input$wt_bkpt1_2bp)
+            q2 = as.numeric(input$wt_bkpt2_2bp)
+            if (q1 < 0 || q1 > 1 || q2 < 0 || q2 > 1) {
+              invalid_quantile()
+              enable("oto_age_controls")
+              return()
+            }
+            wt_brkpts = c(quantile(oto_age_data_filtered$OtoWt, q1, na.rm = TRUE), 
+                          quantile(oto_age_data_filtered$OtoWt, q2, na.rm = TRUE))
           } else {
             wt_brkpts = c(as.numeric(input$wt_bkpt1_2bp), as.numeric(input$wt_bkpt2_2bp))  
           }
@@ -343,7 +349,7 @@ shinyServer(function(input, output, session) {
       enable("download_oto_age_model")
       pred_ages = predict(rv$oto_age_model, rv$oto_age_data)
       rv$predicted_oto_age_data = cbind(rv$oto_age_data, "Predicted Ages" = pred_ages)
-  
+      
       if (plot_jitter) {
         rv$jitter_plot = jitter_plot(as.numeric(input$num_jitter), rv$oto_age_model)
       } else {
@@ -352,7 +358,7 @@ shinyServer(function(input, output, session) {
       enable("oto_age_controls")
     }
   })
-
+  
   # download a sample otowt age data table
   output$download_oto_age_model <- downloadHandler(
     filename = "oto_age_model.rds",
@@ -379,7 +385,6 @@ shinyServer(function(input, output, session) {
   output$oto_age_plot <- renderUI({
     if (is.null(rv$oto_age_data) || is.null(rv$oto_age_model_name)) return()
     
-    helpText("hello")
     if (rv$oto_age_model_name == "Quadratic") {
       quad = y ~ poly(x, 2, raw = TRUE)
       p = ggplot(data = rv$oto_age_data_filter_info) +
@@ -393,21 +398,21 @@ shinyServer(function(input, output, session) {
         geom_point(aes(x = OtoWt, y = Age, colour = Selected)) +
         geom_line(aes(x = OtoWt, y = Expected), color = "blue")
     }
-    p = p + labs(title = "Otolith Weight and Age Fit", x = "Otolith Weight (mg)", y = "Age (yr)") +
+    p = p + labs(title = "Otolith Weight and Age Fit", x = paste0("Otolith Weight (", input$wt_unit, ")"), y = paste0("Age (", input$age_unit_oto,")")) +
       scale_colour_discrete(name = "")
     return(ggplotly(p, tooltip = c("x", "y")) %>%
              # R square and AIC value as annotations
-          layout(annotations = list(text = TeX(sprintf("R^2 = %.3f \\\\ \\text{AIC} = %.3f", AIC(rv$oto_age_model), summary(rv$oto_age_model)$r.squared)),
-                                    xref = "paper",  # normalize coordinates
-                                    yref = "paper",
-                                    x = 0.95,  # appears in bottom right corner
-                                    y = 0.05,
-                                    showarrow = FALSE),
-                 font = list(family = "'Times New Roman', 'arial', 'Raleway','verdana'")) %>%
-          plotly::config(modeBarButtonsToRemove = list("sendDataToCloud", "zoom2d", "pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d", "autoScale2d",
-                "resetScale2d", "hoverCompareCartesian", "hoverClosestCartesian"),
-                displaylogo = FALSE, collaborate = FALSE, mathjax = "cdn")) %>%
-          saveWidget(f)  # to show mathjax
+             layout(annotations = list(text = TeX(sprintf("R^2 = %.3f \\\\ \\text{AIC} = %.3f", AIC(rv$oto_age_model), summary(rv$oto_age_model)$r.squared)),
+                                       xref = "paper",  # normalize coordinates
+                                       yref = "paper",
+                                       x = 0.95,  # appears in bottom right corner
+                                       y = 0.05,
+                                       showarrow = FALSE),
+                    font = list(family = "'Times New Roman', 'arial', 'Raleway','verdana'")) %>%
+             plotly::config(modeBarButtonsToRemove = list("sendDataToCloud", "zoom2d", "pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d", "autoScale2d",
+                                                          "resetScale2d", "hoverCompareCartesian", "hoverClosestCartesian"),
+                            displaylogo = FALSE, collaborate = FALSE, mathjax = "cdn")) %>%
+      saveWidget(f)  # to show mathjax
     # to show mathjax
     tags$iframe(
       src = file.path("tmp", basename(f)),
@@ -444,7 +449,7 @@ shinyServer(function(input, output, session) {
     if (is.null(rv$jitter_plot)) return()
     return(rv$jitter_plot[[5]])
   })
-
+  
   output$jitter_comp_plot <- renderPlotly({
     if (is.null(rv$jitter_plot)) return()
     return(rv$jitter_plot[[6]])
@@ -481,10 +486,11 @@ shinyServer(function(input, output, session) {
       data = rv$predicted_oto_age_data
       colnames(data)[which(names(data) == "Predicted Ages")] = "Read1"
       rv$age_length_data = data.frame("Sample" = data$Sample, "Species" = data$Species,
-                               "Area" = data$Area, "Sex" = data$Sex,
-                               "Length" = data$Length, "Read1" = data$Read1)
+                                      "Area" = data$Area, "Sex" = data$Sex,
+                                      "Length" = data$Length, "Read1" = data$Read1)
       # show Length vs. Age Data tab
       updateTabsetPanel(session, "menu", selected = "tab3")
+      updateTabsetPanel(session, "data", selected = "tab3-1") 
     }
   })
   
@@ -584,6 +590,7 @@ shinyServer(function(input, output, session) {
                                       "Length" = data$Length, "Read1" = data$Read1)
       # show Length vs. Age Data tab
       updateTabsetPanel(session, "menu", selected = "tab3")
+      updateTabsetPanel(session, "data", selected = "tab3-1") 
     }
   })
   
@@ -607,7 +614,9 @@ shinyServer(function(input, output, session) {
         ),
         fluidRow(
           column(3, selectInput("sex", "Sex", choices = c("Any", "F", "M"))),
-          column(3, actionButton("preview_data", "Preview Selected Data", 
+          column(3, textInput("age_unit_preview", "Age Unit", "yr")),
+          column(3, textInput("len_unit_preview", "Length Unit", "mm")),
+          column(3, actionButton("preview_data", "Confirm Selected Data", 
                                  icon = icon("wrench", lib = "glyphicon"), style = "margin-top:25px"))
         )
       ) 
@@ -648,7 +657,7 @@ shinyServer(function(input, output, session) {
       cols_to_use = c("Sample", "Species", "Area", "Sex", "Length", sort(input$reads_selected))
       if (input$sex == "Any") {
         rv$selected_data = subset(rv$age_length_data, Area %in% input$areas_selected &
-                                   Species %in% input$species_selected)
+                                    Species %in% input$species_selected)
       } else {
         rv$selected_data = subset(rv$age_length_data, Sex == input$sex & 
                                     Area %in% input$areas_selected & Species %in% input$species_selected)
@@ -656,6 +665,16 @@ shinyServer(function(input, output, session) {
       rv$selected_data = rv$selected_data[cols_to_use]
       rv$last_run_type = NULL
       rv$last_re_run_type = NULL
+      # set asymptotic initial value be max length of data used for later model runs
+      len_max = format(max(rv$selected_data$Length, na.rm = TRUE), digits = 2)
+      updateTextInput(session, "linf_nls", value = len_max)
+      updateTextInput(session, "gom_a_nls", value = len_max)
+      updateTextInput(session, "sch_r0_nls", value = len_max)
+      updateTextInput(session, "log_a_nls", value = len_max)
+      updateTextInput(session, "linf_re", value = len_max)
+      updateTextInput(session, "gom_a_re", value = len_max)
+      updateTextInput(session, "sch_r0_re", value = len_max)
+      updateTextInput(session, "log_a_re", value = len_max)
       # swith to "Selected Data" tab
       updateTabsetPanel(session, "data", selected = "tab3-2") 
     }
@@ -665,7 +684,7 @@ shinyServer(function(input, output, session) {
   output$selected_data_plot <- renderPlotly({
     # do not plot when the filtered data table is not ready
     if (is.null(rv$selected_data)) return()
-    plot_growth_curve(rv, "input", NULL)
+    plot_growth_curve(rv, "input", NULL, input$age_unit_preview, input$len_unit_preview)
   })
   
   # show the Growth Curve Summaries tab when user clicks the summaries button
@@ -715,7 +734,7 @@ shinyServer(function(input, output, session) {
     ),
     rownames = FALSE
   )
-
+  
   output$gompertz_summaries <- renderDT(
     rv$gompertz_summaries, extensions = 'Buttons',
     server = FALSE, # make sure it downloads all data, not just the ones in view
@@ -731,7 +750,7 @@ shinyServer(function(input, output, session) {
     ),
     rownames = FALSE
   )
-
+  
   output$logistic_summaries <- renderDT(
     rv$logistic_summaries, extensions = 'Buttons',
     server = FALSE, # make sure it downloads all data, not just the ones in view
@@ -747,7 +766,7 @@ shinyServer(function(input, output, session) {
     ),
     rownames = FALSE
   )
-
+  
   output$schnute_summaries <- renderDT(
     rv$schnute_summaries, extensions = 'Buttons',
     server = FALSE, # make sure it downloads all data, not just the ones in view
@@ -766,707 +785,719 @@ shinyServer(function(input, output, session) {
   
   # run estimates for a nonlinear model
   observeEvent(input$run_nls, {
-    if (!is.null(rv$selected_data)) {
-      disable("age_len_std_control")
-      num_reads = ncol(rv$selected_data) - 5
-      len = rv$selected_data$Length
-      num = length(len)
-      # age matrix: nrow = #reads, ncol = num
-      age = t(rv$selected_data[c(-1, -2, -3, -4, -5)])
-      
-      fit_data = strtoi(substring(input$fit_data, 1, 1))
-      
-      len_use = len
-      if (fit_data == 1) {
-        # fit to selected read
-        age_use = age[input$read_selected,]
-      } else if (fit_data == 2) {
-        # fit to average age
-        # create an age vector that is the mean across all reads
-        age_use = apply(age, 2, mean)
-      } else if (fit_data == 3) {
-        # fit to median age
-        # create an age vector that is the median across all reads
-        age_use = apply(age, 2, median)
-      } else {
-        # fit to multiple ages
-        data = melt(rv$selected_data, id = c("Sample", "Species", "Area", "Sex", "Length"))
-        age_use = data$value
-        len_use = data$Length
-      }
-      
-      runname = input$runname_nls
-      
-      if (input$model_nls == "Linear") {
-        rv$last_run_type = "linear"
-        if (input$fit_type == "Standard Deviation") {
-          model = tryCatch({
-            lm(len_use ~ age_use)
-          },
-          error = function(cond) {
-            convg_err()
-            return(NULL)
-          })
-          # returs NULL if model didn't converge
-          if (is.null(model)) {
-            enable("age_len_std_control")
-            return()
-          }
-          rep = summary(model)[["coefficients"]]
-          newRow = format(data.frame("Run name" = runname, "Starting intercept" = NA, "Starting slope" = NA,
-                     "Intercept mean" = rep[1,1], "Intercept Std" = rep[1,2], "Slope mean" = rep[2,1], "Slope Std" = rep[2,2],
-                     "CV Length Error" = NA, "CV Age Error" = NA, "alpha" = NA, "sigma" = NA, "beta" = NA, "shape" = NA,
-                     "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
-        } else {
-          intercept = as.numeric(input$intercept_nls)
-          slope = as.numeric(input$slope_nls)
-          
-          data = list(len = len_use, age = age_use)
-          CV_Lt = as.numeric(input$CV_const)
-          parameters = list(intercept = intercept, slope = slope, CV_Lt = CV_Lt)
-          obj = MakeADFun(data = data, parameters = parameters, DLL = "linear_likelihood")
-          lower = c(-15, 0, exp(1) ^ (-10))
-          upper = c(3 * max(len_use), 1000, exp(1) ^ (2))
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_std_control")
-            return()
-          }
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting intercept" = intercept, "Starting slope" = slope,
-                    "Intercept mean" = rep[1,1], "Intercept Std" = rep[1,2], "Slope mean" = rep[2,1], "Slope Std" = rep[2,2],
-                    "CV Length Error" = rep[3,1], "CV Age Error" = NA, "alpha" = NA, "sigma" = NA, "beta" = NA, "shape" = NA,
-                    "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
-        }
-        rv$linear_summaries = rbind(rv$linear_summaries, newRow)
-      } else if (input$model_nls == "Gompertz") {
-        rv$last_run_type = "gompertz"
-        a = as.numeric(input$gom_a_nls)
-        b = as.numeric(input$gom_b_nls)
-        k = as.numeric(input$gom_k_nls)
-        if (input$fit_type == "Standard Deviation") {
-          model = tryCatch({
-            nls(len ~ a * exp(-b * exp(-k * age)),
-                data = list(age = age_use, len = len_use),
-                start = list(a = a, b = b, k = k),
-                control = list(reltol=0.00000000001))
-          },
-          error = function(cond) {
-            convg_err()
-            return(NULL)
-          })
-          # returs NULL if model didn't converge
-          if (is.null(model)) {
-            enable("age_len_std_control")
-            return()
-          }
-          rep = summary(model)[["parameters"]]
-          newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
-                    "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
-                    "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = NA, "CV Age Error" = NA, "alpha" = NA, "sigma" = NA,
-                    "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
-        } else {
-          data = list(len = len_use, age = age_use)
-          CV_Lt = as.numeric(input$CV_const)
-          parameters = list(a = a, b = b, k = k, CV_Lt = CV_Lt)
-          obj = MakeADFun(data = data, parameters = parameters, DLL = "gompertz_likelihood")
-          lower = c(-Inf, -Inf, -Inf, exp(1) ^ (-10))
-          upper = c(Inf, Inf, Inf, exp(1) ^ (2))
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_std_control")
-            return()
-          }
-          
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
-                     "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
-                     "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = NA, "alpha" = NA, "sigma" = NA,
-                     "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
-        }
-        rv$gompertz_summaries = rbind(rv$gompertz_summaries, newRow)
-      } else if (input$model_nls == "Logistic") {
-        rv$last_run_type = "logistic"
-        a = as.numeric(input$log_a_nls)
-        b = as.numeric(input$log_b_nls)
-        k = as.numeric(input$log_k_nls)
-        if (input$fit_type == "Standard Deviation") {
-          model = tryCatch({
-            nls(len ~ a / (1 + b * exp(-k * age)),
-                data = list(age = age_use, len = len_use),
-                start = list(a = a, b = b, k = k),
-                control = list(reltol=0.00000000001))
-          },
-          error = function(cond) {
-            convg_err()
-            return(NULL)
-          })
-          # returs NULL if model didn't converge
-          if (is.null(model)) {
-            enable("age_len_std_control")
-            return()
-          }
-          rep = summary(model)[["parameters"]]
-          newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
-                    "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
-                    "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = NA, "CV Age Error" = NA, "alpha" = NA, "sigma" = NA,
-                    "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
-        } else {
-          data = list(len = len_use, age = age_use)
-          CV_Lt = as.numeric(input$CV_const)
-          parameters = list(a = a, b = b, k = k, CV_Lt = CV_Lt)
-          obj = MakeADFun(data = data, parameters = parameters, DLL = "logistic_likelihood")
-          lower = c(-Inf, -Inf, -Inf, exp(1) ^ (-10))
-          upper = c(Inf, Inf, Inf, exp(1) ^ (2))
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_std_control")
-            return()
-          }
-          
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b, "Starting k" = k, 
-                    "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
-                     "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = NA, "alpha" = NA, "sigma" = NA,
-                     "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
-        }
-        rv$logistic_summaries = rbind(rv$logistic_summaries, newRow)
-      } else if (input$model_nls == "Schnute") {
-        rv$last_run_type = "schnute"
-        r0 = as.numeric(input$sch_r0_nls)
-        b = as.numeric(input$sch_b_nls)
-        k = as.numeric(input$sch_k_nls)
-        m = as.numeric(input$sch_m_nls)
-        if (input$fit_type == "Standard Deviation") {
-          model = tryCatch({
-            nls(len ~ (r0 + b * exp(k * age)) ** m,
-                data = list(age = age_use, len = len_use),
-                start = list(r0 = r0, b = b, k = k, m = m),
-                control = list(reltol=0.00000000001))
-          },
-          error = function(cond) {
-            convg_err()
-            return(NULL)
-          })
-          # returs NULL if model didn't converge
-          if (is.null(model)) {
-            enable("age_len_std_control")
-            return()
-          }
-          rep = summary(model)[["parameters"]]
-          newRow = format(data.frame("Run name" = runname, "Starting r0" = r0, "Starting b" = b,
-                     "Starting k" = k, "Starting m" = m, "r0 mean" = rep[1,1], "r0 Std" = rep[1,2],
-                     "b mean" = rep[2,1], "b Std" = rep[2,2], "k mean" = rep[3,1], "k Std" = rep[3,2], "m mean" = rep[4,1], "m Std" = rep[4,2],
-                      "CV Length Error" = NA, "CV Age Error" = NA, "alpha" = NA, "sigma" = NA, "beta" = NA, "shape" = NA, "scale" = NA,
-                      "z" = NA, check.names = FALSE), digits = 4)
-        } else {
-          data = list(len = len_use, age = age_use)
-          CV_Lt = as.numeric(input$CV_const)
-          parameters = list(r0 = r0, b = b, k = k, m = m, CV_Lt = CV_Lt)
-          obj = MakeADFun(data = data, parameters = parameters, DLL = "schnute_likelihood")
-          lower = c(-Inf, -Inf, -Inf, -Inf, exp(1) ^ (-10))
-          upper = c(Inf, Inf, Inf, Inf, exp(1) ^ (2))
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_std_control")
-            return()
-          }
-          
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting r0" = r0, "Starting b" = b, "Starting k" = k, 
-                    "Starting m" = m, "r0 mean" = rep[1,1], "r0 Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2], 
-                    "k mean" = rep[3,1], "k Std" = rep[3,2], "m mean" = rep[4,1], "m Std" = rep[4,2], "CV Length Error" = rep[5,1], 
-                    "CV Age Error" = NA, "alpha" = NA, "sigma" = NA, "beta" = NA, "shape" = NA, "scale" = NA,
-                     "z" = NA, check.names = FALSE), digits = 4)
-        }
-        rv$schnute_summaries = rbind(rv$schnute_summaries, newRow)
-      } else { # von bertlanffy
-        rv$last_run_type = "vb"
-        linf = as.numeric(input$linf_nls)
-        kappa = as.numeric(input$kappa_nls)
-        t0 = as.numeric(input$t0_nls)
-        
-        if (input$fit_type == "Standard Deviation") {
-          model = tryCatch({
-            nls(len ~ linf * (1 - exp(-kappa * (age - t0))),
-                data = list(age = age_use, len = len_use),
-                start = list(linf = linf, kappa = kappa, t0 = t0),
-                control = list(reltol=0.00000000001))
-          },
-          error = function(cond) {
-            convg_err()
-            return(NULL)
-          })
-          
-          # returs NULL if model didn't converge
-          if (is.null(model)) {
-            enable("age_len_std_control")
-            return()
-          }
-          
-          rep = summary(model)[["parameters"]]
-          newRow = format(data.frame("Run name" = runname, "Starting Linf" = linf, "Starting K" = kappa,
-                     "Starting t0" = t0, "Linf mean" = rep[1,1], "Linf sd" = rep[1,2], "K mean" = rep[2,1], "K sd" = rep[2,2],
-                     "t0 mean" = rep[3,1], "t0 sd" = rep[3,2], "CV Length Error" = NA, "CV Age Error" = NA, "alpha" = NA, "sigma" = NA,
-                     "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
-        } else {
-          data = list(len = len_use, age = age_use)
-          CV_Lt = as.numeric(input$CV_const)
-          parameters = list(linf = linf, kappa = kappa, t0 = t0, CV_Lt = CV_Lt)
-          obj = MakeADFun(data = data, parameters = parameters, DLL = "vb_likelihood")
-          lower = c(0.75 * max(len_use), 0.0001, -15, exp(1) ^ (-10))
-          upper = c(3 * max(len_use), 1, 1, exp(1) ^ (2))
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_std_control")
-            return()
-          }
-          
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting Linf" = linf, "Starting K" = kappa,
-                     "Starting t0" = t0, "Linf mean" = rep[1,1], "Linf sd" = rep[1,2], "K mean" = rep[2,1], "K sd" = rep[2,2],
-                     "t0 mean" = rep[3,1], "t0 sd" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = NA, "alpha" = NA, "sigma" = NA,
-                     "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
-        }
-        rv$vb_summaries = rbind(rv$vb_summaries, newRow)
-      }
-      enable("age_len_std_control")
-      rv$rep_nls = rep
+    if (is.null(rv$selected_data)) {
+      showModal(modalDialog(
+        title = "Important message",
+        "No data available for analysis.",
+        easyClose = TRUE
+      ))
+      return()
     }
+    disable("age_len_std_control")
+    num_reads = ncol(rv$selected_data) - 5
+    len = rv$selected_data$Length
+    num = length(len)
+    # age matrix: nrow = #reads, ncol = num
+    age = t(rv$selected_data[c(-1, -2, -3, -4, -5)])
+    
+    fit_data = strtoi(substring(input$fit_data, 1, 1))
+    
+    len_use = len
+    if (fit_data == 1) {
+      # fit to selected read
+      age_use = age[input$read_selected,]
+    } else if (fit_data == 2) {
+      # fit to average age
+      # create an age vector that is the mean across all reads
+      age_use = apply(age, 2, mean)
+    } else if (fit_data == 3) {
+      # fit to median age
+      # create an age vector that is the median across all reads
+      age_use = apply(age, 2, median)
+    } else {
+      # fit to multiple ages
+      data = melt(rv$selected_data, id = c("Sample", "Species", "Area", "Sex", "Length"))
+      age_use = data$value
+      len_use = data$Length
+    }
+    
+    runname = input$runname_nls
+    
+    if (input$model_nls == "Linear") {
+      rv$last_run_type = "linear"
+      if (input$fit_type == "Standard Deviation") {
+        model = tryCatch({
+          lm(len_use ~ age_use)
+        },
+        error = function(cond) {
+          convg_err()
+          return(NULL)
+        })
+        # returs NULL if model didn't converge
+        if (is.null(model)) {
+          enable("age_len_std_control")
+          return()
+        }
+        rep = summary(model)[["coefficients"]]
+        newRow = format(data.frame("Run name" = runname, "Starting intercept" = NA, "Starting slope" = NA,
+                                   "Intercept mean" = rep[1,1], "Intercept Std" = rep[1,2], "Slope mean" = rep[2,1], "Slope Std" = rep[2,2],
+                                   "CV Length Error" = NA, "CV Age Error" = NA, "alpha" = NA, "sigma" = NA, "beta" = NA, "shape" = NA,
+                                   "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
+      } else {
+        intercept = as.numeric(input$intercept_nls)
+        slope = as.numeric(input$slope_nls)
+        
+        data = list(len = len_use, age = age_use)
+        CV_Lt = as.numeric(input$CV_const)
+        parameters = list(intercept = intercept, slope = slope, CV_Lt = CV_Lt)
+        obj = MakeADFun(data = data, parameters = parameters, DLL = "linear_likelihood")
+        lower = c(-15, 0, exp(1) ^ (-10))
+        upper = c(3 * max(len_use), 1000, exp(1) ^ (2))
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_std_control")
+          return()
+        }
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting intercept" = intercept, "Starting slope" = slope,
+                                   "Intercept mean" = rep[1,1], "Intercept Std" = rep[1,2], "Slope mean" = rep[2,1], "Slope Std" = rep[2,2],
+                                   "CV Length Error" = rep[3,1], "CV Age Error" = NA, "alpha" = NA, "sigma" = NA, "beta" = NA, "shape" = NA,
+                                   "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
+      }
+      rv$linear_summaries = rbind(rv$linear_summaries, newRow)
+    } else if (input$model_nls == "Gompertz") {
+      rv$last_run_type = "gompertz"
+      a = as.numeric(input$gom_a_nls)
+      b = as.numeric(input$gom_b_nls)
+      k = as.numeric(input$gom_k_nls)
+      if (input$fit_type == "Standard Deviation") {
+        model = tryCatch({
+          nls(len ~ a * exp(-b * exp(-k * age)),
+              data = list(age = age_use, len = len_use),
+              start = list(a = a, b = b, k = k),
+              control = list(reltol=0.00000000001))
+        },
+        error = function(cond) {
+          convg_err()
+          return(NULL)
+        })
+        # returs NULL if model didn't converge
+        if (is.null(model)) {
+          enable("age_len_std_control")
+          return()
+        }
+        rep = summary(model)[["parameters"]]
+        newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
+                                   "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
+                                   "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = NA, "CV Age Error" = NA, "alpha" = NA, "sigma" = NA,
+                                   "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
+      } else {
+        data = list(len = len_use, age = age_use)
+        CV_Lt = as.numeric(input$CV_const)
+        parameters = list(a = a, b = b, k = k, CV_Lt = CV_Lt)
+        obj = MakeADFun(data = data, parameters = parameters, DLL = "gompertz_likelihood")
+        lower = c(-Inf, -Inf, -Inf, exp(1) ^ (-10))
+        upper = c(Inf, Inf, Inf, exp(1) ^ (2))
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_std_control")
+          return()
+        }
+        
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
+                                   "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
+                                   "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = NA, "alpha" = NA, "sigma" = NA,
+                                   "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
+      }
+      rv$gompertz_summaries = rbind(rv$gompertz_summaries, newRow)
+    } else if (input$model_nls == "Logistic") {
+      rv$last_run_type = "logistic"
+      a = as.numeric(input$log_a_nls)
+      b = as.numeric(input$log_b_nls)
+      k = as.numeric(input$log_k_nls)
+      if (input$fit_type == "Standard Deviation") {
+        model = tryCatch({
+          nls(len ~ a / (1 + b * exp(-k * age)),
+              data = list(age = age_use, len = len_use),
+              start = list(a = a, b = b, k = k),
+              control = list(reltol=0.00000000001))
+        },
+        error = function(cond) {
+          convg_err()
+          return(NULL)
+        })
+        # returs NULL if model didn't converge
+        if (is.null(model)) {
+          enable("age_len_std_control")
+          return()
+        }
+        rep = summary(model)[["parameters"]]
+        newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
+                                   "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
+                                   "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = NA, "CV Age Error" = NA, "alpha" = NA, "sigma" = NA,
+                                   "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
+      } else {
+        data = list(len = len_use, age = age_use)
+        CV_Lt = as.numeric(input$CV_const)
+        parameters = list(a = a, b = b, k = k, CV_Lt = CV_Lt)
+        obj = MakeADFun(data = data, parameters = parameters, DLL = "logistic_likelihood")
+        lower = c(-Inf, -Inf, -Inf, exp(1) ^ (-10))
+        upper = c(Inf, Inf, Inf, exp(1) ^ (2))
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_std_control")
+          return()
+        }
+        
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b, "Starting k" = k, 
+                                   "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
+                                   "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = NA, "alpha" = NA, "sigma" = NA,
+                                   "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
+      }
+      rv$logistic_summaries = rbind(rv$logistic_summaries, newRow)
+    } else if (input$model_nls == "Schnute") {
+      rv$last_run_type = "schnute"
+      r0 = as.numeric(input$sch_r0_nls)
+      b = as.numeric(input$sch_b_nls)
+      k = as.numeric(input$sch_k_nls)
+      m = as.numeric(input$sch_m_nls)
+      if (input$fit_type == "Standard Deviation") {
+        model = tryCatch({
+          nls(len ~ (r0 + b * exp(k * age)) ** m,
+              data = list(age = age_use, len = len_use),
+              start = list(r0 = r0, b = b, k = k, m = m),
+              control = list(reltol=0.00000000001))
+        },
+        error = function(cond) {
+          convg_err()
+          return(NULL)
+        })
+        # returs NULL if model didn't converge
+        if (is.null(model)) {
+          enable("age_len_std_control")
+          return()
+        }
+        rep = summary(model)[["parameters"]]
+        newRow = format(data.frame("Run name" = runname, "Starting r0" = r0, "Starting b" = b,
+                                   "Starting k" = k, "Starting m" = m, "r0 mean" = rep[1,1], "r0 Std" = rep[1,2],
+                                   "b mean" = rep[2,1], "b Std" = rep[2,2], "k mean" = rep[3,1], "k Std" = rep[3,2], "m mean" = rep[4,1], "m Std" = rep[4,2],
+                                   "CV Length Error" = NA, "CV Age Error" = NA, "alpha" = NA, "sigma" = NA, "beta" = NA, "shape" = NA, "scale" = NA,
+                                   "z" = NA, check.names = FALSE), digits = 4)
+      } else {
+        data = list(len = len_use, age = age_use)
+        CV_Lt = as.numeric(input$CV_const)
+        parameters = list(r0 = r0, b = b, k = k, m = m, CV_Lt = CV_Lt)
+        obj = MakeADFun(data = data, parameters = parameters, DLL = "schnute_likelihood")
+        lower = c(-Inf, -Inf, -Inf, -Inf, exp(1) ^ (-10))
+        upper = c(Inf, Inf, Inf, Inf, exp(1) ^ (2))
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_std_control")
+          return()
+        }
+        
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting r0" = r0, "Starting b" = b, "Starting k" = k, 
+                                   "Starting m" = m, "r0 mean" = rep[1,1], "r0 Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2], 
+                                   "k mean" = rep[3,1], "k Std" = rep[3,2], "m mean" = rep[4,1], "m Std" = rep[4,2], "CV Length Error" = rep[5,1], 
+                                   "CV Age Error" = NA, "alpha" = NA, "sigma" = NA, "beta" = NA, "shape" = NA, "scale" = NA,
+                                   "z" = NA, check.names = FALSE), digits = 4)
+      }
+      rv$schnute_summaries = rbind(rv$schnute_summaries, newRow)
+    } else { # von bertlanffy
+      rv$last_run_type = "vb"
+      linf = as.numeric(input$linf_nls)
+      kappa = as.numeric(input$kappa_nls)
+      t0 = as.numeric(input$t0_nls)
+      
+      if (input$fit_type == "Standard Deviation") {
+        model = tryCatch({
+          nls(len ~ linf * (1 - exp(-kappa * (age - t0))),
+              data = list(age = age_use, len = len_use),
+              start = list(linf = linf, kappa = kappa, t0 = t0),
+              control = list(reltol=0.00000000001))
+        },
+        error = function(cond) {
+          convg_err()
+          return(NULL)
+        })
+        
+        # returs NULL if model didn't converge
+        if (is.null(model)) {
+          enable("age_len_std_control")
+          return()
+        }
+        
+        rep = summary(model)[["parameters"]]
+        newRow = format(data.frame("Run name" = runname, "Starting Linf" = linf, "Starting K" = kappa,
+                                   "Starting t0" = t0, "Linf mean" = rep[1,1], "Linf sd" = rep[1,2], "K mean" = rep[2,1], "K sd" = rep[2,2],
+                                   "t0 mean" = rep[3,1], "t0 sd" = rep[3,2], "CV Length Error" = NA, "CV Age Error" = NA, "alpha" = NA, "sigma" = NA,
+                                   "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
+      } else {
+        data = list(len = len_use, age = age_use)
+        CV_Lt = as.numeric(input$CV_const)
+        parameters = list(linf = linf, kappa = kappa, t0 = t0, CV_Lt = CV_Lt)
+        obj = MakeADFun(data = data, parameters = parameters, DLL = "vb_likelihood")
+        lower = c(0.75 * max(len_use), 0.0001, -15, exp(1) ^ (-10))
+        upper = c(3 * max(len_use), 1, 1, exp(1) ^ (2))
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_std_control")
+          return()
+        }
+        
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting Linf" = linf, "Starting K" = kappa,
+                                   "Starting t0" = t0, "Linf mean" = rep[1,1], "Linf sd" = rep[1,2], "K mean" = rep[2,1], "K sd" = rep[2,2],
+                                   "t0 mean" = rep[3,1], "t0 sd" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = NA, "alpha" = NA, "sigma" = NA,
+                                   "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
+      }
+      rv$vb_summaries = rbind(rv$vb_summaries, newRow)
+    }
+    enable("age_len_std_control")
+    rv$rep_nls = rep
   })
   
   # run estimates for a random effects model
   observeEvent(input$run_re, {
-    if (!is.null(rv$selected_data)) {
-      disable("age_len_re_control")
-      updateTextInput(session, "start_x", value = "")
-      updateTextInput(session, "start_y", value = "")
-      updateTextInput(session, "end_x", value = "")
-      updateTextInput(session, "end_y", value = "") 
-      rv$z_plot_layer = NULL
-      rv$get_start = FALSE
-      rv$get_end = FALSE
-      
-      num_reads = ncol(rv$selected_data) - 5
-      len = rv$selected_data$Length
-      num = length(len)
-      # age matrix: nrow = #reads, ncol = num
-      age = t(rv$selected_data[c(-1, -2, -3, -4, -5)])
-      
-      
-      if (as.numeric(input$CV_e) < 0) {
-        # estimates age error
-        cv = apply(age, 2, coeff_var)
-        CV_e = sqrt(sum(cv * cv) / num)
-      } else {
-        CV_e = as.numeric(input$CV_e)
-      }
-      
-      data = list(
-        age = age,
-        len = len,
-        CV_e = CV_e,
-        num_reads = num_reads
-      )
-      
-      CV_Lt = as.numeric(input$CV_Lt)
-      alpha = as.numeric(input$alpha)
-      sigma_age = as.numeric(input$sigma_age)
-      beta = as.numeric(input$beta)
-      gam_shape = as.numeric(input$gam_shape)
-      gam_scale = as.numeric(input$gam_scale)
-      runname =  input$runname_re
-      
-      if (input$model_re == "Linear") {
-        rv$last_re_run_type = "linear"
-        dll = paste("linear", input$likelihoods, sep = "_")
-        intercept = as.numeric(input$intercept_re)
-        slope = as.numeric(input$slope_re)
-        if (input$likelihoods == "Normal") {
-          rv$type = "norm"
-          parameters = list(intercept = intercept, slope = slope, CV_Lt = CV_Lt, 
-                            alpha = alpha, sigma_age = sigma_age, age_re = rep(mean(age, na.rm = TRUE), num))
-          
-          lower = c(-Inf, -Inf, exp(1) ^ (-10), 0, exp(1) ^ (-100), rep(min(age), num))
-          # upper bounds
-          upper = c(Inf, Inf, exp(1) ^ (2), 500, exp(1) ^ (100), rep(max(age), num))
-          obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_re_control")
-            return()
-          }
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting intercept" = intercept, "Starting slope" = slope,
-                   "Intercept mean" = rep[1,1], "Intercept Std" = rep[1,2], "Slope mean" = rep[2,1], "Slope Std" = rep[2,2],
-                   "CV Length Error" = rep[3,1], "CV Age Error" = CV_e, "alpha" = rep[4,1], "sigma" = rep[5,1], "beta" = NA, "shape" = NA,
-                   "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
-        } else if (input$likelihoods == "Exponential") {
-          rv$type = "exp"
-          parameters = list(intercept = intercept, slope = slope, CV_Lt = CV_Lt, beta = beta, age_re = rep(mean(age, na.rm = TRUE), num))
-          
-          lower = c(-Inf, -Inf, exp(1) ^ (-10), exp(1) ^ (-100), rep(min(age), num))
-          # upper bounds
-          upper = c(Inf, Inf, exp(1) ^ (2), exp(1) ^ (100), rep(max(age), num) )
-          obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_re_control")
-            return()
-          }
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting intercept" = intercept, "Starting slope" = slope,
-                   "Intercept mean" = rep[1,1], "Intercept Std" = rep[1,2], "Slope mean" = rep[2,1], "Slope Std" = rep[2,2],
-                   "CV Length Error" = rep[3,1], "CV Age Error" = CV_e, "alpha" = NA, "sigma" = NA, "beta" = rep[4,1], "shape" = NA,
-                   "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
-        } else {
-          rv$type = "gam"
-          parameters = list(intercept = intercept, slope = slope, CV_Lt = CV_Lt,
-                            gam_shape = gam_shape, gam_scale = gam_scale, age_re = rep(mean(age, na.rm = TRUE), num))
-          
-          lower = c(-Inf, -Inf, exp(1) ^ (-10), 0, 0, rep(min(age), num))
-          # upper bounds
-          upper = c(Inf, Inf, exp(1) ^ (2), 100, 100, rep(max(age), num))
-          obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_re_control")
-            return()
-          }
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting intercept" = intercept, "Starting slope" = slope,
-                   "Intercept mean" = rep[1,1], "Intercept Std" = rep[1,2], "Slope mean" = rep[2,1], "Slope Std" = rep[2,2],
-                   "CV Length Error" = rep[3,1], "CV Age Error" = CV_e, "alpha" = NA, "sigma" = NA, "beta" = NA, "shape" = rep[4,1],
-                   "scale" = rep[5,1], "z" = NA, check.names = FALSE), digits = 4)
-        }
-        rv$linear_summaries = rbind(rv$linear_summaries, newRow)
-        rv$last_re_run = nrow(rv$linear_summaries)
-      } else if (input$model_re == "Gompertz") {
-        rv$last_re_run_type = "gompertz"
-        dll = paste("gompertz", input$likelihoods, sep = "_")
-        a = as.numeric(input$gom_a_re)
-        b = as.numeric(input$gom_b_re)
-        k = as.numeric(input$gom_k_re)
-        if (input$likelihoods == "Normal") {
-          rv$type = "norm"
-          parameters = list(a = a, b = b, k = k, CV_Lt = CV_Lt, 
-                            alpha = alpha, sigma_age = sigma_age, age_re = rep(mean(age, na.rm = TRUE), num))
-          
-          lower = c(-Inf, -Inf, -Inf, exp(1) ^ (-10), 0, exp(1) ^ (-100), rep(min(age), num))
-          # upper bounds
-          upper = c(Inf, Inf, Inf, exp(1) ^ (2), 500, exp(1) ^ (100), rep(max(age), num))
-          obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_re_control")
-            return()
-          }
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
-                   "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
-                   "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = rep[5,1], "sigma" = rep[6,1],
-                   "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
-        } else if (input$likelihoods == "Exponential") {
-          rv$type = "exp"
-          parameters = list(a = a, b = b, k = k, CV_Lt = CV_Lt, beta = beta, age_re = rep(mean(age, na.rm = TRUE), num))
-          
-          lower = c(-Inf, -Inf, -Inf, exp(1) ^ (-10), exp(1) ^ (-100), rep(min(age), num))
-          # upper bounds
-          upper = c(Inf, Inf, Inf, exp(1) ^ (2), exp(1) ^ (100), rep(max(age), num) )
-          obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_re_control")
-            return()
-          }
-          rep = summary(sdreport(obj))
-          newRow =format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
-                  "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
-                  "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = NA, "sigma" = NA,
-                  "beta" = rep[5,1], "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
-        } else {
-          rv$type = "gam"
-          parameters = list(a = a, b = b, k = k, CV_Lt = CV_Lt,
-                            gam_shape = gam_shape, gam_scale = gam_scale, age_re = rep(mean(age, na.rm = TRUE), num))
-          
-          lower = c(-Inf, -Inf, -Inf, exp(1) ^ (-10), 0, 0, rep(min(age), num))
-          # upper bounds
-          upper = c(Inf, Inf, Inf, exp(1) ^ (2), 100, 100, rep(max(age), num))
-          obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_re_control")
-            return()
-          }
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
-                   "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
-                   "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = NA, "sigma" = NA,
-                   "beta" = NA, "shape" = rep[5,1], "scale" = rep[6,1], "z" = NA, check.names = FALSE), digits = 4)
-        }
-        rv$gompertz_summaries = rbind(rv$gompertz_summaries, newRow)
-        rv$last_re_run = nrow(rv$gompertz_summaries)
-      } else if (input$model_re == "Logistic") {
-        rv$last_re_run_type = "logistic"
-        dll = paste("logistic", input$likelihoods, sep = "_")
-        a = as.numeric(input$log_a_re)
-        b = as.numeric(input$log_b_re)
-        k = as.numeric(input$log_k_re)
-        if (input$likelihoods == "Normal") {
-          rv$type = "norm"
-          parameters = list(a = a, b = b, k = k, CV_Lt = CV_Lt, 
-                            alpha = alpha, sigma_age = sigma_age, age_re = rep(mean(age, na.rm = TRUE), num))
-          
-          lower = c(-Inf, -Inf, -Inf, exp(1) ^ (-10), 0, exp(1) ^ (-100), rep(min(age), num))
-          # upper bounds
-          upper = c(Inf, Inf, Inf, exp(1) ^ (2), 500, exp(1) ^ (100), rep(max(age), num))
-          obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_re_control")
-            return()
-          }
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
-                   "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
-                   "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = rep[5,1], "sigma" = rep[6,1],
-                   "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
-        } else if (input$likelihoods == "Exponential") {
-          rv$type = "exp"
-          parameters = list(a = a, b = b, k = k, CV_Lt = CV_Lt, beta = beta, age_re = rep(mean(age, na.rm = TRUE), num))
-          
-          lower = c(-Inf, -Inf, -Inf, exp(1) ^ (-10), exp(1) ^ (-100), rep(min(age), num))
-          # upper bounds
-          upper = c(Inf, Inf, Inf, exp(1) ^ (2), exp(1) ^ (100), rep(max(age), num) )
-          obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_re_control")
-            return()
-          }
-          rep = summary(sdreport(obj))
-          newRow =format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
-                  "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
-                  "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = NA, "sigma" = NA,
-                  "beta" = rep[5,1], "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
-        } else {
-          rv$type = "gam"
-          parameters = list(a = a, b = b, k = k, CV_Lt = CV_Lt,
-                            gam_shape = gam_shape, gam_scale = gam_scale, age_re = rep(mean(age, na.rm = TRUE), num))
-          
-          lower = c(-Inf, -Inf, -Inf, exp(1) ^ (-10), 0, 0, rep(min(age), num))
-          # upper bounds
-          upper = c(Inf, Inf, Inf, exp(1) ^ (2), 100, 100, rep(max(age), num))
-          obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_re_control")
-            return()
-          }
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
-                   "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
-                   "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = NA, "sigma" = NA,
-                   "beta" = NA, "shape" = rep[5,1], "scale" = rep[6,1], "z" = NA, check.names = FALSE), digits = 4)
-        }
-        rv$logistic_summaries = rbind(rv$logistic_summaries, newRow)
-        rv$last_re_run = nrow(rv$logistic_summaries)
-      } else if (input$model_re == "Schnute") {
-        rv$last_re_run_type = "schnute"
-        dll = paste("Schnute", input$likelihoods, sep = "_")
-        r0 = as.numeric(input$sch_r0_re)
-        b = as.numeric(input$sch_b_re)
-        k = as.numeric(input$sch_k_re)
-        m = as.numeric(input$sch_m_re)
-        if (input$likelihoods == "Normal") {
-          rv$type = "norm"
-          parameters = list(r0 = r0, b = b, k = k, m = m, CV_Lt = CV_Lt, 
-                   alpha = alpha, sigma_age = sigma_age, age_re = rep(mean(age, na.rm = TRUE), num))
-          
-          lower = c(-Inf, -Inf, -Inf, -Inf, exp(1) ^ (-10), 0, exp(1) ^ (-100), rep(min(age), num))
-          # upper bounds
-          upper = c(Inf, Inf, Inf, Inf, exp(1) ^ (2), 500, exp(1) ^ (100), rep(max(age), num))
-          obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_re_control")
-            return()
-          }
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting r0" = r0, "Starting b" = b, "Starting k" = k, 
-                   "Starting m" = m, "r0 mean" = rep[1,1], "r0 Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2], 
-                   "k mean" = rep[3,1], "k Std" = rep[3,2], "m mean" = rep[4,1], "m Std" = rep[4,2], "CV Length Error" = rep[5,1], 
-                   "CV Age Error" = CV_e, "alpha" = rep[6,1], "sigma" = rep[7,1], "beta" = NA, "shape" = NA, "scale" = NA,
-                   "z" = NA, check.names = FALSE), digits = 4)
-        } else if (input$likelihoods == "Exponential") {
-          rv$type = "exp"
-          parameters = list(r0 = r0, b = b, k = k, m = m, CV_Lt = CV_Lt, beta = beta, age_re = rep(mean(age, na.rm = TRUE), num))
-          
-          
-          lower = c(-Inf, -Inf, -Inf, -Inf, exp(1) ^ (-10), exp(1) ^ (-100), rep(min(age), num))
-          # upper bounds
-          upper = c(Inf, Inf, Inf, Inf, exp(1) ^ (2), exp(1) ^ (100), rep(max(age), num) )
-          obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_re_control")
-            return()
-          }
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting r0" = r0, "Starting b" = b, "Starting k" = k, 
-                       "Starting m" = m, "r0 mean" = rep[1,1], "r0 Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2], 
-                       "k mean" = rep[3,1], "k Std" = rep[3,2], "m mean" = rep[4,1], "m Std" = rep[4,2], "CV Length Error" = rep[5,1], 
-                       "CV Age Error" = CV_e, "alpha" = NA, "sigma" = NA, "beta" = rep[6,1], "shape" = NA, "scale" = NA,
-                       "z" = NA, check.names = FALSE), digits = 4)
-        } else {
-          rv$type = "gam"
-          parameters = list(r0 = r0, b = b, k = k, m = m, CV_Lt = CV_Lt,
-                            gam_shape = gam_shape, gam_scale = gam_scale, age_re = rep(mean(age, na.rm = TRUE), num))
-          
-          lower = c(-Inf, -Inf, -Inf, -Inf, exp(1) ^ (-10), 0, 0, rep(min(age), num))
-          # upper bounds
-          upper = c(Inf, Inf, Inf, Inf, exp(1) ^ (2), 100, 100, rep(max(age), num))
-          obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_re_control")
-            return()
-          }
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting r0" = r0, "Starting b" = b, "Starting k" = k, 
-                   "Starting m" = m, "r0 mean" = rep[1,1], "r0 Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2], 
-                   "k mean" = rep[3,1], "k Std" = rep[3,2], "m mean" = rep[4,1], "m Std" = rep[4,2], "CV Length Error" = rep[5,1], 
-                   "CV Age Error" = CV_e, "alpha" = NA, "sigma" = NA, "beta" = NA, "shape" = rep[6,1], "scale" = rep[7,1],
-                   "z" = NA, check.names = FALSE), digits = 4)
-        }
-        rv$schnute_summaries = rbind(rv$schnute_summaries, newRow)
-        rv$last_re_run = nrow(rv$schnute_summaries)
-      } else { # input$model_re == "Von Bertlanffy"
-        rv$last_re_run_type = "vb"
-        dll = paste("vbre", input$likelihoods, sep = "_")
-        linf = as.numeric(input$linf_re)
-        kappa = as.numeric(input$kappa_re)
-        t0 = as.numeric(input$t0_re)
-        if (input$likelihoods == "Normal") {
-          rv$type = "norm"
-          parameters = list(linf = linf, kappa = kappa, t0 = t0, CV_Lt = CV_Lt, 
-                            alpha = alpha, sigma_age = sigma_age, age_re = rep(mean(age, na.rm = TRUE), num))
-          
-          # lower bounds: linf, kappa, t0, CV_Lt, alpha, sigma_age, age_re
-          lower = c(0.75 * max(len), 0.0001, -15, exp(1) ^ (-10), 0, exp(1) ^ (-100), rep(min(age), num))
-          # upper bounds
-          upper = c(3 * max(len), 1, 1, exp(1) ^ (2), 500, exp(1) ^ (100), rep(max(age), num))
-          obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_re_control")
-            return()
-          }
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting Linf" = linf, "Starting K" = kappa,
-                   "Starting t0" = t0, "Linf mean" = rep[1,1], "Linf sd" = rep[1,2], "K mean" = rep[2,1], "K sd" = rep[2,2],
-                   "t0 mean" = rep[3,1], "t0 sd" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = rep[5,1],
-                   "sigma" = rep[6,1], "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
-        } else if (input$likelihoods == "Exponential") {
-          rv$type = "exp"
-          parameters = list(linf = linf, kappa = kappa, t0 = t0, CV_Lt = CV_Lt, beta = beta, age_re = rep(mean(age, na.rm = TRUE), num))
-          
-          # lower bounds: linf, kappa, t0, CV_Lt, beta, age_re
-          lower = c(0.75 * max(len), 0.0001, -15, exp(1) ^ (-10), exp(1) ^ (-100), rep(min(age), num))
-          # upper bounds
-          upper = c(3 * max(len), 1, 1, exp(1) ^ (2), exp(1) ^ (100), rep(max(age), num) )
-          obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_re_control")
-            return()
-          }
-          
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting Linf" = linf, "Starting K" = kappa,
-                   "Starting t0" = t0, "Linf mean" = rep[1,1], "Linf sd" = rep[1,2], "K mean" = rep[2,1], "K sd" = rep[2,2],
-                   "t0 mean" = rep[3,1], "t0 sd" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = NA,
-                   "sigma" = NA, "beta" = rep[5,1], "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
-        } else { #gamma
-          rv$type = "gam"
-          parameters = list(linf = linf, kappa = kappa, t0 = t0, CV_Lt = CV_Lt, 
-                            gam_shape = gam_shape, gam_scale = gam_scale, age_re = rep(mean(age, na.rm = TRUE), num))
-          
-          # lower bounds: linf, kappa, t0, CV_Lt, gam_shape, gam_scale, age_re
-          lower = c(0.75 * max(len), 0.0001, -15, exp(1) ^ (-10), 0, 0, rep(min(age), num))
-          # upper bounds
-          upper = c(3 * max(len), 1, 1, exp(1) ^ (2), 100, 100, rep(max(age), num))
-          obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
-          opt = opt(obj, lower, upper)
-          
-          # return NULL if model didn't converge
-          if (is.null(opt)) {
-            enable("age_len_re_control")
-            return()
-          }
-          
-          rep = summary(sdreport(obj))
-          newRow = format(data.frame("Run name" = runname, "Starting Linf" = linf, "Starting K" = kappa,
-                  "Starting t0" = t0, "Linf mean" = rep[1,1], "Linf sd" = rep[1,2], "K mean" = rep[2,1], "K sd" = rep[2,2],
-                  "t0 mean" = rep[3,1], "t0 sd" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = NA,
-                   "sigma" = NA, "beta" = NA, "shape" = rep[5,1], "scale" = rep[6,1], "z" = NA, check.names = FALSE), digits = 4)
-        }
-        rv$vb_summaries = rbind(rv$vb_summaries, newRow)
-        rv$last_re_run = nrow(rv$vb_summaries)
-      }
-      enable("age_len_re_control")
-      rv$rep_re = rep
+    if (is.null(rv$selected_data)) {
+      showModal(modalDialog(
+        title = "Important message",
+        "No data available for analysis.",
+        easyClose = TRUE
+      ))
+      return()
     }
+    disable("age_len_re_control")
+    updateTextInput(session, "start_x", value = "")
+    updateTextInput(session, "start_y", value = "")
+    updateTextInput(session, "end_x", value = "")
+    updateTextInput(session, "end_y", value = "") 
+    rv$z_plot_layer = NULL
+    rv$get_start = FALSE
+    rv$get_end = FALSE
+    
+    num_reads = ncol(rv$selected_data) - 5
+    len = rv$selected_data$Length
+    num = length(len)
+    # age matrix: nrow = #reads, ncol = num
+    age = t(rv$selected_data[c(-1, -2, -3, -4, -5)])
+    
+    
+    if (as.numeric(input$CV_e) < 0) {
+      # estimates age error
+      cv = apply(age, 2, coeff_var)
+      CV_e = sqrt(sum(cv * cv) / num)
+    } else {
+      CV_e = as.numeric(input$CV_e)
+    }
+    
+    data = list(
+      age = age,
+      len = len,
+      CV_e = CV_e,
+      num_reads = num_reads
+    )
+    
+    CV_Lt = as.numeric(input$CV_Lt)
+    alpha = as.numeric(input$alpha)
+    sigma_age = as.numeric(input$sigma_age)
+    beta = as.numeric(input$beta)
+    gam_shape = as.numeric(input$gam_shape)
+    gam_scale = as.numeric(input$gam_scale)
+    runname =  input$runname_re
+    
+    if (input$model_re == "Linear") {
+      rv$last_re_run_type = "linear"
+      dll = paste("linear", input$likelihoods, sep = "_")
+      intercept = as.numeric(input$intercept_re)
+      slope = as.numeric(input$slope_re)
+      if (input$likelihoods == "Normal") {
+        rv$type = "norm"
+        parameters = list(intercept = intercept, slope = slope, CV_Lt = CV_Lt, 
+                          alpha = alpha, sigma_age = sigma_age, age_re = rep(mean(age, na.rm = TRUE), num))
+        
+        lower = c(-Inf, -Inf, exp(1) ^ (-10), 0, exp(1) ^ (-100), rep(min(age), num))
+        # upper bounds
+        upper = c(Inf, Inf, exp(1) ^ (2), 500, exp(1) ^ (100), rep(max(age), num))
+        obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_re_control")
+          return()
+        }
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting intercept" = intercept, "Starting slope" = slope,
+                                   "Intercept mean" = rep[1,1], "Intercept Std" = rep[1,2], "Slope mean" = rep[2,1], "Slope Std" = rep[2,2],
+                                   "CV Length Error" = rep[3,1], "CV Age Error" = CV_e, "alpha" = rep[4,1], "sigma" = rep[5,1], "beta" = NA, "shape" = NA,
+                                   "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
+      } else if (input$likelihoods == "Exponential") {
+        rv$type = "exp"
+        parameters = list(intercept = intercept, slope = slope, CV_Lt = CV_Lt, beta = beta, age_re = rep(mean(age, na.rm = TRUE), num))
+        
+        lower = c(-Inf, -Inf, exp(1) ^ (-10), exp(1) ^ (-100), rep(min(age), num))
+        # upper bounds
+        upper = c(Inf, Inf, exp(1) ^ (2), exp(1) ^ (100), rep(max(age), num) )
+        obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_re_control")
+          return()
+        }
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting intercept" = intercept, "Starting slope" = slope,
+                                   "Intercept mean" = rep[1,1], "Intercept Std" = rep[1,2], "Slope mean" = rep[2,1], "Slope Std" = rep[2,2],
+                                   "CV Length Error" = rep[3,1], "CV Age Error" = CV_e, "alpha" = NA, "sigma" = NA, "beta" = rep[4,1], "shape" = NA,
+                                   "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
+      } else {
+        rv$type = "gam"
+        parameters = list(intercept = intercept, slope = slope, CV_Lt = CV_Lt,
+                          gam_shape = gam_shape, gam_scale = gam_scale, age_re = rep(mean(age, na.rm = TRUE), num))
+        
+        lower = c(-Inf, -Inf, exp(1) ^ (-10), 0, 0, rep(min(age), num))
+        # upper bounds
+        upper = c(Inf, Inf, exp(1) ^ (2), 100, 100, rep(max(age), num))
+        obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_re_control")
+          return()
+        }
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting intercept" = intercept, "Starting slope" = slope,
+                                   "Intercept mean" = rep[1,1], "Intercept Std" = rep[1,2], "Slope mean" = rep[2,1], "Slope Std" = rep[2,2],
+                                   "CV Length Error" = rep[3,1], "CV Age Error" = CV_e, "alpha" = NA, "sigma" = NA, "beta" = NA, "shape" = rep[4,1],
+                                   "scale" = rep[5,1], "z" = NA, check.names = FALSE), digits = 4)
+      }
+      rv$linear_summaries = rbind(rv$linear_summaries, newRow)
+      rv$last_re_run = nrow(rv$linear_summaries)
+    } else if (input$model_re == "Gompertz") {
+      rv$last_re_run_type = "gompertz"
+      dll = paste("gompertz", input$likelihoods, sep = "_")
+      a = as.numeric(input$gom_a_re)
+      b = as.numeric(input$gom_b_re)
+      k = as.numeric(input$gom_k_re)
+      if (input$likelihoods == "Normal") {
+        rv$type = "norm"
+        parameters = list(a = a, b = b, k = k, CV_Lt = CV_Lt, 
+                          alpha = alpha, sigma_age = sigma_age, age_re = rep(mean(age, na.rm = TRUE), num))
+        
+        lower = c(-Inf, -Inf, -Inf, exp(1) ^ (-10), 0, exp(1) ^ (-100), rep(min(age), num))
+        # upper bounds
+        upper = c(Inf, Inf, Inf, exp(1) ^ (2), 500, exp(1) ^ (100), rep(max(age), num))
+        obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_re_control")
+          return()
+        }
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
+                                   "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
+                                   "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = rep[5,1], "sigma" = rep[6,1],
+                                   "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
+      } else if (input$likelihoods == "Exponential") {
+        rv$type = "exp"
+        parameters = list(a = a, b = b, k = k, CV_Lt = CV_Lt, beta = beta, age_re = rep(mean(age, na.rm = TRUE), num))
+        
+        lower = c(-Inf, -Inf, -Inf, exp(1) ^ (-10), exp(1) ^ (-100), rep(min(age), num))
+        # upper bounds
+        upper = c(Inf, Inf, Inf, exp(1) ^ (2), exp(1) ^ (100), rep(max(age), num) )
+        obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_re_control")
+          return()
+        }
+        rep = summary(sdreport(obj))
+        newRow =format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
+                                  "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
+                                  "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = NA, "sigma" = NA,
+                                  "beta" = rep[5,1], "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
+      } else {
+        rv$type = "gam"
+        parameters = list(a = a, b = b, k = k, CV_Lt = CV_Lt,
+                          gam_shape = gam_shape, gam_scale = gam_scale, age_re = rep(mean(age, na.rm = TRUE), num))
+        
+        lower = c(-Inf, -Inf, -Inf, exp(1) ^ (-10), 0, 0, rep(min(age), num))
+        # upper bounds
+        upper = c(Inf, Inf, Inf, exp(1) ^ (2), 100, 100, rep(max(age), num))
+        obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_re_control")
+          return()
+        }
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
+                                   "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
+                                   "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = NA, "sigma" = NA,
+                                   "beta" = NA, "shape" = rep[5,1], "scale" = rep[6,1], "z" = NA, check.names = FALSE), digits = 4)
+      }
+      rv$gompertz_summaries = rbind(rv$gompertz_summaries, newRow)
+      rv$last_re_run = nrow(rv$gompertz_summaries)
+    } else if (input$model_re == "Logistic") {
+      rv$last_re_run_type = "logistic"
+      dll = paste("logistic", input$likelihoods, sep = "_")
+      a = as.numeric(input$log_a_re)
+      b = as.numeric(input$log_b_re)
+      k = as.numeric(input$log_k_re)
+      if (input$likelihoods == "Normal") {
+        rv$type = "norm"
+        parameters = list(a = a, b = b, k = k, CV_Lt = CV_Lt, 
+                          alpha = alpha, sigma_age = sigma_age, age_re = rep(mean(age, na.rm = TRUE), num))
+        
+        lower = c(-Inf, -Inf, -Inf, exp(1) ^ (-10), 0, exp(1) ^ (-100), rep(min(age), num))
+        # upper bounds
+        upper = c(Inf, Inf, Inf, exp(1) ^ (2), 500, exp(1) ^ (100), rep(max(age), num))
+        obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_re_control")
+          return()
+        }
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
+                                   "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
+                                   "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = rep[5,1], "sigma" = rep[6,1],
+                                   "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
+      } else if (input$likelihoods == "Exponential") {
+        rv$type = "exp"
+        parameters = list(a = a, b = b, k = k, CV_Lt = CV_Lt, beta = beta, age_re = rep(mean(age, na.rm = TRUE), num))
+        
+        lower = c(-Inf, -Inf, -Inf, exp(1) ^ (-10), exp(1) ^ (-100), rep(min(age), num))
+        # upper bounds
+        upper = c(Inf, Inf, Inf, exp(1) ^ (2), exp(1) ^ (100), rep(max(age), num) )
+        obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_re_control")
+          return()
+        }
+        rep = summary(sdreport(obj))
+        newRow =format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
+                                  "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
+                                  "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = NA, "sigma" = NA,
+                                  "beta" = rep[5,1], "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
+      } else {
+        rv$type = "gam"
+        parameters = list(a = a, b = b, k = k, CV_Lt = CV_Lt,
+                          gam_shape = gam_shape, gam_scale = gam_scale, age_re = rep(mean(age, na.rm = TRUE), num))
+        
+        lower = c(-Inf, -Inf, -Inf, exp(1) ^ (-10), 0, 0, rep(min(age), num))
+        # upper bounds
+        upper = c(Inf, Inf, Inf, exp(1) ^ (2), 100, 100, rep(max(age), num))
+        obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_re_control")
+          return()
+        }
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting a" = a, "Starting b" = b,
+                                   "Starting k" = k, "a mean" = rep[1,1], "a Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2],
+                                   "k mean" = rep[3,1], "k Std" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = NA, "sigma" = NA,
+                                   "beta" = NA, "shape" = rep[5,1], "scale" = rep[6,1], "z" = NA, check.names = FALSE), digits = 4)
+      }
+      rv$logistic_summaries = rbind(rv$logistic_summaries, newRow)
+      rv$last_re_run = nrow(rv$logistic_summaries)
+    } else if (input$model_re == "Schnute") {
+      rv$last_re_run_type = "schnute"
+      dll = paste("Schnute", input$likelihoods, sep = "_")
+      r0 = as.numeric(input$sch_r0_re)
+      b = as.numeric(input$sch_b_re)
+      k = as.numeric(input$sch_k_re)
+      m = as.numeric(input$sch_m_re)
+      if (input$likelihoods == "Normal") {
+        rv$type = "norm"
+        parameters = list(r0 = r0, b = b, k = k, m = m, CV_Lt = CV_Lt, 
+                          alpha = alpha, sigma_age = sigma_age, age_re = rep(mean(age, na.rm = TRUE), num))
+        
+        lower = c(-Inf, -Inf, -Inf, -Inf, exp(1) ^ (-10), 0, exp(1) ^ (-100), rep(min(age), num))
+        # upper bounds
+        upper = c(Inf, Inf, Inf, Inf, exp(1) ^ (2), 500, exp(1) ^ (100), rep(max(age), num))
+        obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_re_control")
+          return()
+        }
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting r0" = r0, "Starting b" = b, "Starting k" = k, 
+                                   "Starting m" = m, "r0 mean" = rep[1,1], "r0 Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2], 
+                                   "k mean" = rep[3,1], "k Std" = rep[3,2], "m mean" = rep[4,1], "m Std" = rep[4,2], "CV Length Error" = rep[5,1], 
+                                   "CV Age Error" = CV_e, "alpha" = rep[6,1], "sigma" = rep[7,1], "beta" = NA, "shape" = NA, "scale" = NA,
+                                   "z" = NA, check.names = FALSE), digits = 4)
+      } else if (input$likelihoods == "Exponential") {
+        rv$type = "exp"
+        parameters = list(r0 = r0, b = b, k = k, m = m, CV_Lt = CV_Lt, beta = beta, age_re = rep(mean(age, na.rm = TRUE), num))
+        
+        
+        lower = c(-Inf, -Inf, -Inf, -Inf, exp(1) ^ (-10), exp(1) ^ (-100), rep(min(age), num))
+        # upper bounds
+        upper = c(Inf, Inf, Inf, Inf, exp(1) ^ (2), exp(1) ^ (100), rep(max(age), num) )
+        obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_re_control")
+          return()
+        }
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting r0" = r0, "Starting b" = b, "Starting k" = k, 
+                                   "Starting m" = m, "r0 mean" = rep[1,1], "r0 Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2], 
+                                   "k mean" = rep[3,1], "k Std" = rep[3,2], "m mean" = rep[4,1], "m Std" = rep[4,2], "CV Length Error" = rep[5,1], 
+                                   "CV Age Error" = CV_e, "alpha" = NA, "sigma" = NA, "beta" = rep[6,1], "shape" = NA, "scale" = NA,
+                                   "z" = NA, check.names = FALSE), digits = 4)
+      } else {
+        rv$type = "gam"
+        parameters = list(r0 = r0, b = b, k = k, m = m, CV_Lt = CV_Lt,
+                          gam_shape = gam_shape, gam_scale = gam_scale, age_re = rep(mean(age, na.rm = TRUE), num))
+        
+        lower = c(-Inf, -Inf, -Inf, -Inf, exp(1) ^ (-10), 0, 0, rep(min(age), num))
+        # upper bounds
+        upper = c(Inf, Inf, Inf, Inf, exp(1) ^ (2), 100, 100, rep(max(age), num))
+        obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_re_control")
+          return()
+        }
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting r0" = r0, "Starting b" = b, "Starting k" = k, 
+                                   "Starting m" = m, "r0 mean" = rep[1,1], "r0 Std" = rep[1,2], "b mean" = rep[2,1], "b Std" = rep[2,2], 
+                                   "k mean" = rep[3,1], "k Std" = rep[3,2], "m mean" = rep[4,1], "m Std" = rep[4,2], "CV Length Error" = rep[5,1], 
+                                   "CV Age Error" = CV_e, "alpha" = NA, "sigma" = NA, "beta" = NA, "shape" = rep[6,1], "scale" = rep[7,1],
+                                   "z" = NA, check.names = FALSE), digits = 4)
+      }
+      rv$schnute_summaries = rbind(rv$schnute_summaries, newRow)
+      rv$last_re_run = nrow(rv$schnute_summaries)
+    } else { # input$model_re == "Von Bertlanffy"
+      rv$last_re_run_type = "vb"
+      dll = paste("vbre", input$likelihoods, sep = "_")
+      linf = as.numeric(input$linf_re)
+      kappa = as.numeric(input$kappa_re)
+      t0 = as.numeric(input$t0_re)
+      if (input$likelihoods == "Normal") {
+        rv$type = "norm"
+        parameters = list(linf = linf, kappa = kappa, t0 = t0, CV_Lt = CV_Lt, 
+                          alpha = alpha, sigma_age = sigma_age, age_re = rep(mean(age, na.rm = TRUE), num))
+        
+        # lower bounds: linf, kappa, t0, CV_Lt, alpha, sigma_age, age_re
+        lower = c(0.75 * max(len), 0.0001, -15, exp(1) ^ (-10), 0, exp(1) ^ (-100), rep(min(age), num))
+        # upper bounds
+        upper = c(3 * max(len), 1, 1, exp(1) ^ (2), 500, exp(1) ^ (100), rep(max(age), num))
+        obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_re_control")
+          return()
+        }
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting Linf" = linf, "Starting K" = kappa,
+                                   "Starting t0" = t0, "Linf mean" = rep[1,1], "Linf sd" = rep[1,2], "K mean" = rep[2,1], "K sd" = rep[2,2],
+                                   "t0 mean" = rep[3,1], "t0 sd" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = rep[5,1],
+                                   "sigma" = rep[6,1], "beta" = NA, "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
+      } else if (input$likelihoods == "Exponential") {
+        rv$type = "exp"
+        parameters = list(linf = linf, kappa = kappa, t0 = t0, CV_Lt = CV_Lt, beta = beta, age_re = rep(mean(age, na.rm = TRUE), num))
+        
+        # lower bounds: linf, kappa, t0, CV_Lt, beta, age_re
+        lower = c(0.75 * max(len), 0.0001, -15, exp(1) ^ (-10), exp(1) ^ (-100), rep(min(age), num))
+        # upper bounds
+        upper = c(3 * max(len), 1, 1, exp(1) ^ (2), exp(1) ^ (100), rep(max(age), num) )
+        obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_re_control")
+          return()
+        }
+        
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting Linf" = linf, "Starting K" = kappa,
+                                   "Starting t0" = t0, "Linf mean" = rep[1,1], "Linf sd" = rep[1,2], "K mean" = rep[2,1], "K sd" = rep[2,2],
+                                   "t0 mean" = rep[3,1], "t0 sd" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = NA,
+                                   "sigma" = NA, "beta" = rep[5,1], "shape" = NA, "scale" = NA, "z" = NA, check.names = FALSE), digits = 4)
+      } else { #gamma
+        rv$type = "gam"
+        parameters = list(linf = linf, kappa = kappa, t0 = t0, CV_Lt = CV_Lt, 
+                          gam_shape = gam_shape, gam_scale = gam_scale, age_re = rep(mean(age, na.rm = TRUE), num))
+        
+        # lower bounds: linf, kappa, t0, CV_Lt, gam_shape, gam_scale, age_re
+        lower = c(0.75 * max(len), 0.0001, -15, exp(1) ^ (-10), 0, 0, rep(min(age), num))
+        # upper bounds
+        upper = c(3 * max(len), 1, 1, exp(1) ^ (2), 100, 100, rep(max(age), num))
+        obj = MakeADFun(data = data, parameters = parameters, random = "age_re", DLL = dll)
+        opt = opt(obj, lower, upper)
+        
+        # return NULL if model didn't converge
+        if (is.null(opt)) {
+          enable("age_len_re_control")
+          return()
+        }
+        
+        rep = summary(sdreport(obj))
+        newRow = format(data.frame("Run name" = runname, "Starting Linf" = linf, "Starting K" = kappa,
+                                   "Starting t0" = t0, "Linf mean" = rep[1,1], "Linf sd" = rep[1,2], "K mean" = rep[2,1], "K sd" = rep[2,2],
+                                   "t0 mean" = rep[3,1], "t0 sd" = rep[3,2], "CV Length Error" = rep[4,1], "CV Age Error" = CV_e, "alpha" = NA,
+                                   "sigma" = NA, "beta" = NA, "shape" = rep[5,1], "scale" = rep[6,1], "z" = NA, check.names = FALSE), digits = 4)
+      }
+      rv$vb_summaries = rbind(rv$vb_summaries, newRow)
+      rv$last_re_run = nrow(rv$vb_summaries)
+    }
+    enable("age_len_re_control")
+    rv$rep_re = rep
   })
   
   # nonlinear fit plot
   output$ModelNLS_Plot <- renderPlotly({
     if (is.null(rv$selected_data) || is.null(rv$rep_nls)) return()
-    plot_growth_curve(rv, "analyze", "nls")
+    plot_growth_curve(rv, "analyze", "nls", input$age_unit_nls, input$len_unit_nls)
   })
   
   # random effects plot
   output$ModelRE_Plot <- renderPlotly({
     if (is.null(rv$selected_data) || is.null(rv$rep_re)) return()
-    plot_growth_curve(rv, "analyze", "re")
+    plot_growth_curve(rv, "analyze", "re", input$age_unit_re, input$len_unit_re)
   })
   
   # alerts the computed z value when user clicks get z value button
@@ -1505,12 +1536,12 @@ shinyServer(function(input, output, session) {
     rv$get_end = FALSE
     rv$get_start = TRUE
   })
-
+  
   observeEvent(input$get_end, {
     rv$get_start = FALSE
     rv$get_end = TRUE
   })
-
+  
   # populate endpoints coordinates with histogram bar coordinates
   # when user clicks on the bars
   observe({
@@ -1549,7 +1580,7 @@ shinyServer(function(input, output, session) {
         data = data.frame("Age" = rv$rep_re[8:(7+num), 1])
       }
     }
-
+    
     
     bins = seq(min(data), max(data), length.out = input$bins + 1)
     
@@ -1563,7 +1594,7 @@ shinyServer(function(input, output, session) {
     ggplotly(p, tooltip = c("Age", "Count"), source = "hist_RE") %>%
       layout(font = list(family = "'Times New Roman', 'arial', 'Raleway','verdana'")) %>% 
       plotly::config(modeBarButtonsToRemove = 
-      list("sendDataToCloud", "zoom2d", "pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d", "autoScale2d",
-           "resetScale2d", "hoverCompareCartesian", "hoverClosestCartesian"), displaylogo = FALSE, collaborate = FALSE)
+                       list("sendDataToCloud", "zoom2d", "pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d", "autoScale2d",
+                            "resetScale2d", "hoverCompareCartesian", "hoverClosestCartesian"), displaylogo = FALSE, collaborate = FALSE)
   })
 })
