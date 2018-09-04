@@ -614,8 +614,11 @@ shinyServer(function(input, output, session) {
         ),
         fluidRow(
           column(3, selectInput("sex", "Sex", choices = c("Any", "F", "M"))),
+ master
           column(3, textInput("age_unit_preview", "Age Unit", "yr")),
           column(3, textInput("len_unit_preview", "Length Unit", "mm")),
+
+ master
           column(3, actionButton("preview_data", "Confirm Selected Data", 
                                  icon = icon("wrench", lib = "glyphicon"), style = "margin-top:25px"))
         )
