@@ -118,6 +118,10 @@ shinyUI(fluidPage(
                                                                                 numericInput("num_jitter", "Number of times", 5, min = 1, max = 100)
                                                                               )
                                                                             ),
+                                                                            fluidRow(
+                                                                              column(6, textInput("wt_unit", "Otolith Weight Unit", "mg")),
+                                                                              column(6, textInput("age_unit_oto", "Age Unit", "yr"))
+                                                                            ),
                                                                             actionButton("run_oto_age", "Predict Ages", icon("stats", lib = "glyphicon"))
                                                                   )
                                                            ),
@@ -300,6 +304,10 @@ shinyUI(fluidPage(
                                                                               condition = "input.fit_type == 'Constant Length CV'",
                                                                               textInput("CV_const", "CV", 0.1)
                                                                             ),
+                                                                            fluidRow(
+                                                                              column(6, textInput("len_unit_nls", "Length Unit", "mm")),
+                                                                              column(6, textInput("age_unit_nls", "Age Unit", "yr"))
+                                                                            ),
                                                                             textInput("runname_nls", "Run Name", "Default"),
                                                                             actionButton("run_nls", "Run A Standard Non-Linear Estimation",
                                                                                          icon("stats", lib = "glyphicon")))
@@ -376,6 +384,10 @@ shinyUI(fluidPage(
                                                                                                  textInput("gam_shape", "Shape", 5),
                                                                                                  textInput("gam_scale", "Scale", 3)
                                                                                         )
+                                                                            ),
+                                                                            fluidRow(
+                                                                              column(6, textInput("len_unit_re", "Length Unit", "mm")),
+                                                                              column(6, textInput("age_unit_re", "Age Unit", "yr"))
                                                                             ),
                                                                             textInput("runname_re", "Run Name", "Default"),
                                                                             actionButton("run_re", "Run A Random Effects Estimation",
