@@ -379,7 +379,6 @@ shinyServer(function(input, output, session) {
   output$oto_age_plot <- renderUI({
     if (is.null(rv$oto_age_data) || is.null(rv$oto_age_model_name)) return()
     
-    helpText("hello")
     if (rv$oto_age_model_name == "Quadratic") {
       quad = y ~ poly(x, 2, raw = TRUE)
       p = ggplot(data = rv$oto_age_data_filter_info) +
@@ -485,6 +484,7 @@ shinyServer(function(input, output, session) {
                                "Length" = data$Length, "Read1" = data$Read1)
       # show Length vs. Age Data tab
       updateTabsetPanel(session, "menu", selected = "tab3")
+      updateTabsetPanel(session, "data", selected = "tab3-1") 
     }
   })
   
@@ -584,6 +584,7 @@ shinyServer(function(input, output, session) {
                                       "Length" = data$Length, "Read1" = data$Read1)
       # show Length vs. Age Data tab
       updateTabsetPanel(session, "menu", selected = "tab3")
+      updateTabsetPanel(session, "data", selected = "tab3-1") 
     }
   })
   
@@ -607,7 +608,7 @@ shinyServer(function(input, output, session) {
         ),
         fluidRow(
           column(3, selectInput("sex", "Sex", choices = c("Any", "F", "M"))),
-          column(3, actionButton("preview_data", "Preview Selected Data", 
+          column(3, actionButton("preview_data", "Confirm Selected Data", 
                                  icon = icon("wrench", lib = "glyphicon"), style = "margin-top:25px"))
         )
       ) 
