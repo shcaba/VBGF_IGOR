@@ -104,8 +104,8 @@ opt <- function(obj, lower, upper) {
   return(opt)
 }
 
-# plot data points and the fitting curve
-plot_growth_curve <- function(rv, mode, model) {
+# plot data points and the fitting curve for age and length
+plot_growth_curve <- function(rv, mode, model, age_unit, len_unit) {
   age_max = max(rv$selected_data[c(-1, -2, -3, -4, -5)])
   # get current selected reads (the ones in the filtered data table)
   reads_choices = names(rv$selected_data[c(-1, -2, -3, -4, -5)])
@@ -119,7 +119,8 @@ plot_growth_curve <- function(rv, mode, model) {
   names(colors) = c("Expected", reads_choices)
   
   p = ggplot(data = rv$selected_data) +
-    labs(title = "Age and Growth Fit", x = "Age (yr)", y = "Length (mm)")
+     labs(title = "Age and Growth Fit", x = paste0("Age (", age_unit, ")"), y = paste0("Length (", len_unit, ")"))
+    
   for (i in reads_choices) {
     p = p + geom_point(mapping = aes_string(Species = "Species", Area = "Area", Sex = "Sex", x = i, y= "Length", color = paste("'", i, "'", sep = "")))
   }
