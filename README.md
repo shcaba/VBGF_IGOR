@@ -8,9 +8,9 @@ IGOR is an R shiny tool that allows you to do the following tasks:
 ## Prerequisite
 
 This Shiny app requires users to have a C++ compiler installed. 
-<br><\br>
+<br></br>
 For Windows users, you should have Rtools installed. During installation, you need to edit the `PATH` variable to make sure that `c:\Rtools\bin;`, and `c:\Rtools\mingw_64\bin;` or `c:\Rtools\mingw_32\bin;` (64-bit or 32-bit version) are included in `PATH` as these directories contain the gcc compiler. Refer to this [Install Rtools for Windows](https://github.com/stan-dev/rstan/wiki/Install-Rtools-for-Windows) if necessary.
-<br><\br>
+<br></br>
 For Mac users, you may need to install command line developer tools by running `xcode-select --install` in a terminal.
 
 ## How To Run The App
