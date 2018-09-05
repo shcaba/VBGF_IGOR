@@ -1,16 +1,19 @@
 # IGOR+: Fitting Growth Curves with Random Effects
 
-IGOR is a shiny tool that allows you to do the following tasks:
+IGOR is an R shiny tool that allows you to do the following tasks:
 1. Create an Age vs. Otolith Weight model (piecewise or linear) with user data,
 2. Use an existing Age vs. Otolith Weight model to predict ages for fish with known otolith weights,
 3. Run a growth curve model (gompertz, linear, logistic, schnute, or von bertlanffy) to fit fish lengths with ages.
 
 ## Prerequisite
 
-This Shiny app requires users to have a C++ compiler installed.
+This Shiny app requires users to have a C++ compiler installed. For Windows users, you should have Rtools installed. During installation, you need to edit the `PATH` variable to make sure that `c:\Rtools\bin;`, and `c:\Rtools\mingw_64\bin;` or `c:\Rtools\mingw_32\bin;` (64-bit or 32-bit version) are included in `PATH` as these directories contain the gcc compiler. Refer to this [Install Rtools for Windows](https://github.com/stan-dev/rstan/wiki/Install-Rtools-for-Windows) if necessary.
 
 ## How To Run The App
 
+Download the Shiny_IGOR folder to a local directory. To run the app, you can:
+1. Click Run App in RStudio when you open the `ui.R`, `server.R`, or `global.R`,
+2. on a terminal, type `R -e "shiny::runApp('~/path_to_this_shiny_app')"`. You should see something like `http://127.0.0.1:6108` (the port number is randomly selected), and then navigate your browser to that address.
 
 
 ## How Do I Run an Age vs. Otolith Weight Analysis?
