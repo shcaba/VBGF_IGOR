@@ -1048,8 +1048,11 @@ shinyServer(function(input, output, session) {
         CV_Lt = as.numeric(input$CV_const)
         parameters = list(linf = linf, kappa = kappa, t0 = t0, CV_Lt = CV_Lt)
         obj = MakeADFun(data = data, parameters = parameters, DLL = "vb_likelihood")
-        lower = c(0.75 * max(len_use), 0.0001, -15, exp(1) ^ (-10))
-        upper = c(3 * max(len_use), 1, 1, exp(1) ^ (2))
+        #lower = c(0.75 * max(len_use), 0.0001, -15, exp(1) ^ (-10))
+        #upper = c(3 * max(len_use), 1, 1, exp(1) ^ (2))
+        upper = c(Inf, Inf, Inf, Inf)
+        lower = c(-Inf, -Inf, -Inf, -Inf)
+        
         opt = opt(obj, lower, upper)
         
         # return NULL if model didn't converge
