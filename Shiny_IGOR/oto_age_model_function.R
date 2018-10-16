@@ -37,7 +37,7 @@ oto_age_model <- function(data, wt_brkpts = c(0, 0), jitter = 0) {
     piecewise_model = NULL
   } else if (jitter > 0) {
     piecewise_model[["jitter_all"]] = jitters
-    piecewise_model[["no_jitter_model"]] = oto_age_model(data, wt_brkpts, lt_brkpts, jitter = 0, add_lengths)
+    piecewise_model[["no_jitter_model"]] = oto_age_model(data, wt_brkpts, jitter = 0)
   }
   
   return (piecewise_model)
