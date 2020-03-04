@@ -7,9 +7,10 @@ IGOR is an R Shiny tool that allows you to do the following tasks:
 
 ## Prerequisite
 
-Install TMB (https://github.com/kaskr/adcomp/wiki/Download) using the install.packages("TMB") command in the R terminal. TMB requires the installation of Rtools, a program which contains a C++ compiler.
+Install TMB (https://github.com/kaskr/adcomp/wiki/Download) using the `install.packages("TMB")` command in the R terminal.
 <br></br>
-For Windows users, you should have Rtools installed. During installation, you need to edit the `PATH` variable to make sure that `c:\Rtools\bin;`, and `c:\Rtools\mingw_64\bin;` or `c:\Rtools\mingw_32\bin;` (64-bit or 32-bit version) are included in `PATH` as these directories contain the gcc compiler. The command `Sys.getenv("PATH")` can be used in R to check you `PATH` variables. For futher directions, refer to [Install Rtools for Windows](https://github.com/kaskr/adcomp/wiki/Windows-installation).
+TMB requires the installation of Rtools, a program which contains a C++ compiler.
+For Windows users, you should have Rtools installed. During installation, you need to edit the `PATH` variable to make sure that `c:\Rtools\bin;`, and `c:\Rtools\mingw_64\bin;` or `c:\Rtools\mingw_32\bin;` (64-bit or 32-bit version) are included in `PATH` as these directories contain the C++ gcc compiler. The command `Sys.getenv("PATH")` can be used in R to check you `PATH` variables. For futher directions, refer to [Install Rtools for Windows](https://github.com/kaskr/adcomp/wiki/Windows-installation).
 <br></br>
 For Mac users, you may need to install command line developer tools by running `xcode-select --install` in a terminal.
 
