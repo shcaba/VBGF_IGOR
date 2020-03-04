@@ -1,23 +1,23 @@
 # IGOR+: Fitting Growth Curves with Random Effects
 
-IGOR is an R shiny tool that allows you to do the following tasks:
+IGOR is an R Shiny tool that allows you to do the following tasks:
 1. Estimate age and growth parameters for a variety of model (Gompertz, linear, logistic, Schnute, or von Bertalanffy).
 2. Estimate an Otolith Weight vs. Age predictive model (linear or piecewise) with user data.
 3. Use an existing Otolith Weight vs. Age model to predict ages for fish with known otolith weights.
 
 ## Prerequisite
 
-This Shiny app requires users to have a C++ compiler installed. 
+Install TMB (https://github.com/kaskr/adcomp/wiki/Download) using the install.packages("TMB") command in the R terminal. TMB requires the installation of Rtools, a program which contains a C++ compiler.
 <br></br>
-For Windows users, you should have Rtools installed. During installation, you need to edit the `PATH` variable to make sure that `c:\Rtools\bin;`, and `c:\Rtools\mingw_64\bin;` or `c:\Rtools\mingw_32\bin;` (64-bit or 32-bit version) are included in `PATH` as these directories contain the gcc compiler. The command `Sys.getenv("PATH")` can be used in R to check you `PATH` variables. For futher directions, refer to [Install Rtools for Windows](https://github.com/stan-dev/rstan/wiki/Install-Rtools-for-Windows).
+For Windows users, you should have Rtools installed. During installation, you need to edit the `PATH` variable to make sure that `c:\Rtools\bin;`, and `c:\Rtools\mingw_64\bin;` or `c:\Rtools\mingw_32\bin;` (64-bit or 32-bit version) are included in `PATH` as these directories contain the gcc compiler. The command `Sys.getenv("PATH")` can be used in R to check you `PATH` variables. For futher directions, refer to [Install Rtools for Windows](https://github.com/kaskr/adcomp/wiki/Windows-installation).
 <br></br>
 For Mac users, you may need to install command line developer tools by running `xcode-select --install` in a terminal.
 
 ## How To Run The App
 
 Download the Shiny_IGOR folder to a local directory. To run the app, you can:
-1. Click Run App button in RStudio when you open the `ui.R`, `server.R`, or `global.R` files
-2. From the terminal, type `R -e "shiny::runApp('~/path_to_this_shiny_app')"`. You should see something like `http://127.0.0.1:6108` (the port number is randomly selected), and then navigate your browser to that address.
+1. Within RStudio, open the `ui.R`, `server.R`, or `global.R` files  and click the Run App button.
+2. From an R terminal, type `R -e "shiny::runApp('~/path_to_this_shiny_app')"`. You should see something like `http://127.0.0.1:6108` (the port number is randomly selected), and then navigate your browser to that address.
 
 ## How Do I Run A Growth Curve Model Analysis?
 
